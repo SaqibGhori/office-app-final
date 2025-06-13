@@ -1,4 +1,5 @@
 import React from 'react'
+import RealTimeCharts from '../Components/RealTImeCharts';
 
 const MainDashboard = () => {
    const sections = [
@@ -90,6 +91,14 @@ const MainDashboard = () => {
             </div>
           </div>
         ))}
+    </div>
+    <div className='flex'>
+    <div className='w-[50%] h-64 border-1' >
+      <RealTimeCharts/>
+    </div>
+    <div className='w-[50%] h-64 border-1' >
+      <RealTimeCharts/>
+    </div>
     </div>
     </>
     
