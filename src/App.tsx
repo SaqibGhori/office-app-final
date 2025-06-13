@@ -2,7 +2,10 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import DashboardLayout from './Layouts/DashboardLayout';
 import MainDashboard from './Pages/MainDashboard';
 import FIleView from './Pages/FIleView';
+
 import Test from './Pages/test';
+import Phase2 from './Pages/Phase2';
+import Phase3 from './Pages/Phase3';
 
 // import SettingsPage from './pages/SettingsPage';
 // import AnalyticsPage from './pages/AnalyticsPage';
@@ -16,9 +19,14 @@ function App() {
         <Route element={<DashboardLayout/>}>
           <Route path="/" element={<MainDashboard/>} />
           <Route path="/fileview" element={<FIleView/>} />
+
           <Route path="/test" element={<Test />} />
           {/* <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/settings" element={<SettingsPage />} /> */}
+
+          <Route path="/phase2" element={<Phase2/> } />
+          <Route path="/phase3" element={<Phase3/>} />
+
         </Route>
         
         {/* Routes without sidebar (if needed) */}

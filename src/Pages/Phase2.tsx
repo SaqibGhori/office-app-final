@@ -1,6 +1,7 @@
+
 import RealTimeCharts from '../Components/RealTImeCharts';
 
-const MainDashboard = () => {
+const Phase2 = () => {
   const sections = [
     {
       title: 'Voltage(L-N)',
@@ -72,7 +73,7 @@ const MainDashboard = () => {
     <>
       <div className='flex justify-between items-center'>
         <div>
-          <h1 className='text-2xl font-bold ml-5'>Main Dashboard</h1>
+          <h1 className='text-2xl font-bold ml-5'>Phase 2</h1>
         </div>
          <div className='flex gap-2'>
                     <a href='' className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-l">
@@ -85,7 +86,7 @@ const MainDashboard = () => {
                         File View
                     </a>
                     <a href='' className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r">
-                        Alarm testing
+                        Alarm
                     </a>
         </div>
 
@@ -111,7 +112,7 @@ const MainDashboard = () => {
         ))}
       </div>
       <div className='flex'>
-        <div className='w-[50%] h-96  ' >
+        <div className='w-[50%] h-96 ' >
           <RealTimeCharts />
         </div>
         <div className='w-[50%] h-96  border-1' >
@@ -123,4 +124,4 @@ const MainDashboard = () => {
   )
 }
 
-export default MainDashboard
+export default Phase2

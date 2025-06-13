@@ -34,15 +34,15 @@ const Sidebar = () => {
       label: "Main Dashboard",
     },
     {
-      path: "/fileview",
+      path: "/phase2",
       icon: "insert_chart",
-      label: "Phase 1",
+      label: "Phase 2",
     },
-    // {
-    //   path: "/settings",
-    //   icon: "settings",
-    //   label: "Settings",
-    // },
+    {
+      path: "/phase3",
+      icon: "insert_chart",
+      label: "Phase3",
+    },
   ];
 
   // const secondaryNavItems = [
