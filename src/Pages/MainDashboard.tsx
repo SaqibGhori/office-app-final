@@ -93,10 +93,10 @@ const MainDashboard = () => {
         ))}
     </div>
     <div className='flex'>
-    <div className='w-[50%] h-64 border-1' >
+    <div className='w-[50%] h-96 ' >
       <RealTimeCharts/>
     </div>
-    <div className='w-[50%] h-64 border-1' >
+    <div className='w-[50%] h-96  border-1' >
       <RealTimeCharts/>
     </div>
     </div>
