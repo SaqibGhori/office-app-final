@@ -85,7 +85,7 @@ const MainDashboard = () => {
                         File View
                     </a>
                     <a href='' className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r">
-                        Alarm
+                        Alarm testing
                     </a>
         </div>
 
@@ -111,7 +111,7 @@ const MainDashboard = () => {
         ))}
       </div>
       <div className='flex'>
-        <div className='w-[50%] h-96 ' >
+        <div className='w-[50%] h-96  ' >
           <RealTimeCharts />
         </div>
         <div className='w-[50%] h-96  border-1' >
