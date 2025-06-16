@@ -6,6 +6,7 @@ type ReadingHandler = (data: any) => void;
 export function useSocket(onReading?: ReadingHandler): Socket | null {
   const socketRef = useRef<Socket | null>(null);
 
+  
   const onMessage = useCallback((data: any) => {
     onReading?.(data);
   }, [onReading]);
