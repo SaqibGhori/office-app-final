@@ -1,6 +1,6 @@
 // pages/test.tsx
 import { useEffect, useState } from 'react'
-import { io } from 'socket.io-client'
+import {useSocket} from '../hooks/useSocket'  // ensure the path is correct
 
 type Reading = {
   voltage: number
@@ -9,24 +9,20 @@ type Reading = {
   createdAt: string
 }
 
-export default function Test() {
+export default function TestPage() {
   const [reading, setReading] = useState<Reading | null>(null)
 
-  useEffect(() => {
-    // 1️⃣ Connect to your backend
-    const socket = io('http://localhost:3000')
+  // useSocket takes your callback and returns the socket instance (unused here)
+  useSocket((data: Reading) => {
+    console.log('🚀 new-reading', data)
+    setReading(data)
+  })
+  // const socket = useSocket((data) => {
+  //   console.log('New reading:', data);
+  // });
 
-    // 2️⃣ Listen for “new-reading” events
-    socket.on('new-reading', (data: Reading) => {
-      // console.log('🚀 new-reading', data)
-      setReading(data)
-    })
+  
 
-    // 3️⃣ Clean up on unmount
-    return () => {
-      socket.disconnect()
-    }
-  }, [])
 
   return (
     <div className="p-8">
