@@ -1,5 +1,5 @@
 // pages/test.tsx
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {useSocket} from '../hooks/useSocket'  // ensure the path is correct
 
 type Reading = {
