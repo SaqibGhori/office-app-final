@@ -86,6 +86,9 @@ const MainDashboard = () => {
                     <Link to='/fileview'  className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r">
                         File View
                     </Link>
+                    <Link to='/test'  className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r">
+                        Test
+                    </Link>
                     <a href='' className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r">
                         Alarm testing
                     </a>
