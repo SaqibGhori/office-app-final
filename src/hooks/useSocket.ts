@@ -11,7 +11,7 @@ export function useSocket(onReading?: ReadingHandler): Socket | null {
   }, [onReading]);
 
   useEffect(() => {
-    const url = import.meta.env.VITE_SOCKET_URL || '';
+    const url = import.meta.env.VITE_SOCKET_URL || 'https://backend-office-xyz.up.railway.app';
     socketRef.current = io(url);
     socketRef.current.on('new-reading', onMessage);
 
