@@ -18,7 +18,7 @@ export default function Test() {
 
     // 2️⃣ Listen for “new-reading” events
     socket.on('new-reading', (data: Reading) => {
-      console.log('🚀 new-reading', data)
+      // console.log('🚀 new-reading', data)
       setReading(data)
     })
 

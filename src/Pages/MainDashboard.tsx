@@ -1,6 +1,8 @@
+import { Link } from 'react-router-dom';
 import RealTimeCharts from '../Components/RealTImeCharts';
 
 const MainDashboard = () => {
+
   const sections = [
     {
       title: 'Voltage(L-N)',
@@ -81,9 +83,9 @@ const MainDashboard = () => {
                     <a href='' className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r">
                         Harmonics
                     </a>
-                    <a href='/fileview' className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r">
+                    <Link to='/fileview'  className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r">
                         File View
-                    </a>
+                    </Link>
                     <a href='' className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r">
                         Alarm testing
                     </a>

@@ -164,7 +164,7 @@ const FIleView = () => {
                             <div className='bg-white hover:bg-slate-200 py-2 text-center my-1'><input type="checkbox" /> <label htmlFor="">VL6</label></div>
                         </div>
                     </div>
-                    <div className='col-span-9 bg-slate-300 p-5 max-h-96 overflow-y-auto
+                    <div className='col-span-9 bg-slate-300 p-5 max-h-[500px] overflow-y-auto
                                        [&::-webkit-scrollbar]:w-2
                                        [&::-webkit-scrollbar-track]:rounded-full
                                        [&::-webkit-scrollbar-track]:bg-gray-100
