@@ -132,7 +132,7 @@ export default function TestPage() {
 
   return (
     <>
-    {reading ?  
+    {/* {reading ?   */}
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 p-4">
       {sections.map((section, sectionIndex) => (
         <div key={sectionIndex} className="bg-white rounded-lg shadow p-4">
@@ -153,7 +153,7 @@ export default function TestPage() {
         </div>
       ))}
     </div>
-    : "loading..."}
+    {/* // : "loading..."} */}
     </>
 
   )
