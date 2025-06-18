@@ -1,5 +1,5 @@
 import {useState, type SetStateAction} from 'react'
-import RealTimeCharts from '../Components/RealTImeCharts';
+// import RealTimeCharts from '../Components/RealTImeCharts';
 
 const FIleView = () => {
      const [selectedValue, setSelectedValue] = useState('table'); // Set default value
@@ -241,7 +241,8 @@ const FIleView = () => {
                             </tbody>
                         </table> 
                         :
-                        <RealTimeCharts/>
+                        // <RealTimeCharts/>
+                        <div>testing</div>
                         }
                     </div>
                 </div>

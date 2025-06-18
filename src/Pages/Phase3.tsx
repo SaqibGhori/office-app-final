@@ -1,4 +1,4 @@
-import RealTimeCharts from '../Components/RealTImeCharts';
+// import RealTimeCharts from '../Components/RealTImeCharts';
 
 const Phase3 = () => {
   const sections = [
@@ -112,10 +112,10 @@ const Phase3 = () => {
       </div>
       <div className='flex'>
         <div className='w-[50%] h-96 ' >
-          <RealTimeCharts />
+          {/* <RealTimeCharts /> */}
         </div>
         <div className='w-[50%] h-96  border-1' >
-          <RealTimeCharts />
+          {/* <RealTimeCharts /> */}
         </div>
       </div>
     </>

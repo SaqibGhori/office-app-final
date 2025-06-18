@@ -12,7 +12,7 @@ export function useSocket(onReading?: ReadingHandler): Socket | null {
   }, [onReading]);
 
   useEffect(() => {
-    const url = import.meta.env.VITE_SOCKET_URL || 'https://backend-office-production.up.railway.app';
+    const url = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000';
     socketRef.current = io(url);
     socketRef.current.on('new-reading', onMessage);
 
