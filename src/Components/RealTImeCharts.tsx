@@ -86,7 +86,7 @@ const RealTImeCharts: React.FC<RealTimeChartProps> = ({ selectedTitle }) => {
   return (
     <div className="p-4 bg-white shadow rounded">
       {series.length > 0 ? (
-        <Chart options={options} series={series} type="line" height={500} />
+        <Chart options={options} series={series} type="line" height={400} />
       ) : (
         <p>Waiting for {selectedTitle || "data"}...</p>
       )}

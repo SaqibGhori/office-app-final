@@ -18,7 +18,7 @@ type Reading = {
 };
 
 const MainDashboard = () => {
-  const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
+  const [selectedTitle, setSelectedTitle] = useState<string | null>("Voltage(L-N)");
   const [reading, setReading] = useState<Reading | null>(null);
 
   // 🧠 Use the reusable socket hook
@@ -116,34 +116,53 @@ const MainDashboard = () => {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 p-4">
-        {sections.map((section, sectionIndex) => (
-          <div key={sectionIndex}
-            onClick={() => {
-              setSelectedTitle(section.title);
-              console.log("Clicked card title:", section.title);
-            }} className="bg-white rounded-lg shadow p-4">
-            <h2 className="text-lg font-semibold mb-3 text-gray-700 border-b pb-2">
-              {section.title}
-            </h2>
-            <div className="space-y-2">
-              {section.values.map((item, itemIndex) => (
-                <div
-                  key={itemIndex}
-                  className="flex justify-between items-center"
-                >
-                  <span className="text-gray-600 w-16">{item.label}</span>
-                  <div className="flex-1 flex items-center justify-end">
-                    <span className="text-gray-800 font-mono mr-1">
-                      {item.value}
-                    </span>
-                    <span className="text-gray-500 text-sm">{item.unit}</span>
+        {reading
+          ? sections.map((section, sectionIndex) => (
+            <div
+              key={sectionIndex}
+              onClick={() => {
+                setSelectedTitle(section.title);
+                console.log("Clicked card title:", section.title);
+              }}
+              className="bg-white rounded-lg shadow p-4"
+            >
+              <h2 className="text-lg font-semibold mb-3 text-gray-700 border-b pb-2">
+                {section.title}
+              </h2>
+              <div className="space-y-2">
+                {section.values.map((item, itemIndex) => (
+                  <div
+                    key={itemIndex}
+                    className="flex justify-between items-center"
+                  >
+                    <span className="text-gray-600 w-16">{item.label}</span>
+                    <div className="flex-1 flex items-center justify-end">
+                      <span className="text-gray-800 font-mono mr-1">
+                        {item.value}
+                      </span>
+                      <span className="text-gray-500 text-sm">{item.unit}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+          : // 👇 Skeleton Loader
+          Array.from({ length: 8 }).map((_, index) => (
+            <div
+              key={index}
+              className="bg-white rounded-lg shadow p-4 animate-pulse space-y-4"
+            >
+              <div className="h-5 bg-gray-300 rounded w-1/2 mb-2"></div>
+              <div className="space-y-2">
+                <div className="h-4 bg-gray-200 rounded w-full"></div>
+                <div className="h-4 bg-gray-200 rounded w-full"></div>
+                <div className="h-4 bg-gray-200 rounded w-full"></div>
+              </div>
+            </div>
+          ))}
       </div>
+
 
       <div className="flex">
         <div className='w-[100%] h-96'>
