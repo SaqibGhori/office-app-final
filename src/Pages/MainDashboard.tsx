@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react'
 import { useSocket } from '../hooks/useSocket'; // adjust path if needed
 import RealTimeCharts from '../Components/RealTImeCharts';
+import { Link } from 'react-router-dom';
 
 // Reading type based on socket data
 type Reading = {
@@ -96,23 +97,25 @@ const MainDashboard = () => {
 
   return (
     <div>
-      <div>
-        <h1 className="text-2xl font-bold ml-5">Main Dashboard</h1>
-      </div>
+      <div className='flex justify-between items-center'>
+        <div>
+          <h1 className="text-2xl font-bold ml-5">Main Dashboard</h1>
+        </div>
 
-      <div className="flex gap-2 p-4">
-        <button className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
-          Energy
-        </button>
-        <button className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
-          Harmonics
-        </button>
-        <button className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
-          File View
-        </button>
-        <button className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
-          Alarm
-        </button>
+        <div className="flex gap-2 p-4">
+          <button className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+            Energy
+          </button>
+          <Link to='/harmonics' className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+            Harmonics
+          </Link>
+          <Link to='/fileview' className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+            File View
+          </Link>
+          <button className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+            Alarm
+          </button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 p-4">
@@ -167,7 +170,6 @@ const MainDashboard = () => {
       <div className="flex">
         <div className='w-[100%] h-96'>
           <RealTimeCharts selectedTitle={selectedTitle} />
-          {/* <RealTimeCharts/> */}
         </div>
       </div>
     </div>

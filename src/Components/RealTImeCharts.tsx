@@ -31,7 +31,7 @@ const keyMap: Record<string, keyof Reading> = {
 const RealTImeCharts: React.FC<RealTimeChartProps> = ({ selectedTitle }) => {
   const [reading, setReading] = useState<Reading | null>(null);
   const [series, setSeries] = useState<any[]>([]);
-  const [labels, setLabels] = useState<string[]>([]);
+  // const [labels, setLabels] = useState<string[]>([]);
   const [timestamps, setTimestamps] = useState<string[]>([]);
 
   useSocket((data: Reading) => {
@@ -45,7 +45,7 @@ const RealTImeCharts: React.FC<RealTimeChartProps> = ({ selectedTitle }) => {
 
     const currentTime = new Date().toLocaleTimeString();
 
-    setTimestamps(prev => [...prev, currentTime].slice(-10));
+    setTimestamps(prev => [...prev, currentTime].slice(-15));
 
     setSeries(prevSeries => {
       return Object.entries(sectionData).map(([label, value]) => {
@@ -55,7 +55,7 @@ const RealTImeCharts: React.FC<RealTimeChartProps> = ({ selectedTitle }) => {
 
         return {
           name: upperLabel,
-          data: updatedData.slice(-10),
+          data: updatedData.slice(-15),
         };
       });
     });
