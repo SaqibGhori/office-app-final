@@ -1,256 +1,199 @@
-import {useState, type SetStateAction} from 'react'
-// import RealTimeCharts from '../Components/RealTImeCharts';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { Link } from "react-router-dom";
 
-const FIleView = () => {
-     const [selectedValue, setSelectedValue] = useState('table'); // Set default value
-
-  const handleSelectChange = (e: { target: { value: SetStateAction<string>; }; }) => {
-    setSelectedValue(e.target.value);
-    console.log(selectedValue , "curent values")
-  }
-
-    const alldata = [
-        {
-            datetime: "2024-02-06 04:06:04",
-            date: "2024-02-06",
-            time: "04:06:04",
-            vl1: "96.1",
-            vl2: "46.5",
-            vl3: "59.5",
-        },
-        {
-            datetime: "2024-02-06 04:06:04",
-            date: "2024-02-06",
-            time: "04:06:04",
-            vl1: "96.1",
-            vl2: "46.5",
-            vl3: "59.5",
-        },
-        {
-            datetime: "2024-02-06 04:06:04",
-            date: "2024-02-06",
-            time: "04:06:04",
-            vl1: "96.1",
-            vl2: "46.5",
-            vl3: "59.5",
-        },
-        {
-            datetime: "2024-02-06 04:06:04",
-            date: "2024-02-06",
-            time: "04:06:04",
-            vl1: "96.1",
-            vl2: "46.5",
-            vl3: "59.5",
-        },
-        {
-            datetime: "2024-02-06 04:06:04",
-            date: "2024-02-06",
-            time: "04:06:04",
-            vl1: "96.1",
-            vl2: "46.5",
-            vl3: "59.5",
-        },
-        {
-            datetime: "2024-02-06 04:06:04",
-            date: "2024-02-06",
-            time: "04:06:04",
-            vl1: "96.1",
-            vl2: "46.5",
-            vl3: "59.5",
-        },
-        {
-            datetime: "2024-02-06 04:06:04",
-            date: "2024-02-06",
-            time: "04:06:04",
-            vl1: "96.1",
-            vl2: "46.5",
-            vl3: "59.5",
-        },
-        {
-            datetime: "2024-02-06 04:06:04",
-            date: "2024-02-06",
-            time: "04:06:04",
-            vl1: "96.1",
-            vl2: "46.5",
-            vl3: "59.5",
-        },
-        {
-            datetime: "2024-02-06 04:06:04",
-            date: "2024-02-06",
-            time: "04:06:04",
-            vl1: "96.1",
-            vl2: "46.5",
-            vl3: "59.5",
-        },
-        {
-            datetime: "2024-02-06 04:06:04",
-            date: "2024-02-06",
-            time: "04:06:04",
-            vl1: "96.1",
-            vl2: "46.5",
-            vl3: "59.5",
-        },
-    ];
-
-    return (
-        <div className='mx-5'>
-            <div className='flex justify-between mb-9'>
-                <div>
-                    <button className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-l">
-                        Back
-                    </button>
-                </div>
-                <div><h2 className='text-3xl font-semibold'>File View</h2></div>
-                <div className='flex gap-2'>
-                    <button className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-l">
-                        Download CSV
-                    </button>
-                    <button className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-r">
-                        Download PDF
-                    </button>
-                </div>
-            </div>
-            <div className='flex justify-between items-center my-5' >
-                <div>Select Your Range:</div>
-                <div><label htmlFor="">From</label> <input className="shadow appearance-none border rounded  py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="username" type="date" placeholder="" /></div>
-                <div><label htmlFor="">To</label><input className="shadow appearance-none border rounded  py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="username" type="date" placeholder="" /></div>
-            </div>
-            <hr />
-            <div className="w-full  my-5">
-                <div className="relative">
-                    <select
-                        value={selectedValue}
-                        onChange={handleSelectChange}
-                        className="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded pl-3 pr-8 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-400 shadow-sm focus:shadow-md appearance-none cursor-pointer">
-                        <option value="table">Table</option>
-                        <option value="chart">Chart</option>
-                    </select>
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.2" stroke="currentColor" className="h-5 w-5 ml-1 absolute top-2.5 right-2.5 text-slate-700">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15 12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
-                    </svg>
-                </div>
-            </div>
-            <div>
-                <div className='grid grid-cols-12 gap-4'>
-                    <div className='col-span-3 bg-slate-300 p-5'>
-                        <div className='mb-3 max-h-52 overflow-y-auto
-                                       [&::-webkit-scrollbar]:w-2
-                                       [&::-webkit-scrollbar-track]:rounded-full
-                                       [&::-webkit-scrollbar-track]:bg-gray-100
-                                       [&::-webkit-scrollbar-thumb]:rounded-full
-                                       [&::-webkit-scrollbar-thumb]:bg-gray-500
-                                       dark:[&::-webkit-scrollbar-track]:bg-neutral-700
-                                       dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500'>
-                            <div className='bg-white hover:bg-slate-200 py-2 text-center my-1'>General Parameters</div>
-                            <div className='bg-white hover:bg-slate-200 py-2 text-center my-1'>Active Power</div>
-                            <div className='bg-white hover:bg-slate-200 py-2 text-center my-1'>Reactive Power</div>
-                            <div className='bg-white hover:bg-slate-200 py-2 text-center my-1'>Apparent Power</div>
-                            <div className='bg-white hover:bg-slate-200 py-2 text-center my-1'>COS</div>
-                            <div className='bg-white hover:bg-slate-200 py-2 text-center my-1'>Power Factor</div>
-                        </div>
-                        <div className='max-h-52 overflow-y-auto
-                                       [&::-webkit-scrollbar]:w-2
-                                       [&::-webkit-scrollbar-track]:rounded-full
-                                       [&::-webkit-scrollbar-track]:bg-gray-100
-                                       [&::-webkit-scrollbar-thumb]:rounded-full
-                                       [&::-webkit-scrollbar-thumb]:bg-gray-500
-                                       dark:[&::-webkit-scrollbar-track]:bg-neutral-700
-                                       dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500'>
-                            <div className='bg-white hover:bg-slate-200 py-2 text-center my-1'><input type="checkbox" /> <label htmlFor="">VL1</label></div>
-                            <div className='bg-white hover:bg-slate-200 py-2 text-center my-1'><input type="checkbox" /> <label htmlFor="">VL2</label></div>
-                            <div className='bg-white hover:bg-slate-200 py-2 text-center my-1'><input type="checkbox" /> <label htmlFor="">VL3</label></div>
-                            <div className='bg-white hover:bg-slate-200 py-2 text-center my-1'><input type="checkbox" /> <label htmlFor="">VL4</label></div>
-                            <div className='bg-white hover:bg-slate-200 py-2 text-center my-1'><input type="checkbox" /> <label htmlFor="">VL5</label></div>
-                            <div className='bg-white hover:bg-slate-200 py-2 text-center my-1'><input type="checkbox" /> <label htmlFor="">VL6</label></div>
-                        </div>
-                    </div>
-                    <div className='col-span-9 bg-slate-300 p-5 max-h-[500px] overflow-y-auto
-                                       [&::-webkit-scrollbar]:w-2
-                                       [&::-webkit-scrollbar-track]:rounded-full
-                                       [&::-webkit-scrollbar-track]:bg-gray-100
-                                       [&::-webkit-scrollbar-thumb]:rounded-full
-                                       [&::-webkit-scrollbar-thumb]:bg-gray-500
-                                       dark:[&::-webkit-scrollbar-track]:bg-neutral-700
-                                       dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500'>
-                       {selectedValue == "table" ? <table className="min-w-full divide-y divide-gray-300">
-                            <thead>
-                                <tr>
-                                    <th
-                                        scope="col"
-                                        className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-0"
-                                    >
-                                        DateTime
-                                    </th>
-                                    <th
-                                        scope="col"
-                                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                                    >
-                                        Date
-                                    </th>
-                                    <th
-                                        scope="col"
-                                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                                    >
-                                        Time
-                                    </th>
-                                    <th
-                                        scope="col"
-                                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                                    >
-                                        VL1
-                                    </th>
-                                    <th
-                                        scope="col"
-                                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                                    >
-                                        VL2
-                                    </th>
-                                    <th
-                                        scope="col"
-                                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                                    >
-                                        VL3
-                                    </th>
-
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y   ">
-                                {alldata.map((data) => (
-                                    <tr className='hover:bg-slate-200' >
-                                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
-                                            {data.datetime}
-                                        </td>
-                                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-0">
-                                            {data.date}
-                                        </td>
-                                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                            {data.time}
-                                        </td>
-                                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                            {data.vl1}
-                                        </td>
-                                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                            {data.vl2}
-                                        </td>
-                                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                            {data.vl3}
-                                        </td>
-
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table> 
-                        :
-                        // <RealTimeCharts/>
-                        <div>testing</div>
-                        }
-                    </div>
-                </div>
-                {/* <div></div> */}
-            </div>
-        </div>
-
-    )
+// Types for data structure
+interface ReadingData {
+  [category: string]: {
+    [subcategory: string]: number;
+  };
 }
 
-export default FIleView
+interface Reading {
+  gatewayId: string;
+  timestamp: string;
+  data: ReadingData;
+}
+
+export default function App() {
+  const [allData, setAllData] = useState<Reading[]>([]);
+  const [gatewayIds, setGatewayIds] = useState<string[]>([]);
+  const [selectedGateway, setSelectedGateway] = useState<string>('');
+  const [filteredData, setFilteredData] = useState<Reading[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedSubcategories, setSelectedSubcategories] = useState<string[]>([]);
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await axios.get<Reading[]>("http://localhost:3000/api/readingsdynamic");
+      setAllData(res.data);
+      const gateways = Array.from(new Set(res.data.map(d => d.gatewayId)));
+      setGatewayIds(gateways);
+      if (gateways.length > 0) setSelectedGateway(gateways[0]);
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const dataForGateway = allData.filter(d => d.gatewayId === selectedGateway);
+    setFilteredData(dataForGateway);
+    setSelectedCategory(null);
+    setSelectedSubcategories([]);
+  }, [selectedGateway, allData]);
+
+  useEffect(() => {
+    if (filteredData.length > 0) {
+      const firstCategory = Object.keys(filteredData[0].data || {})[0];
+      if (firstCategory) {
+        setSelectedCategory(firstCategory);
+        const subcategories = Object.keys(filteredData[0].data[firstCategory] || {});
+        setSelectedSubcategories(subcategories);
+      }
+    }
+  }, [filteredData]);
+
+  const handleDateFilter = async () => {
+    try {
+      const params: any = { gatewayId: selectedGateway };
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        params.startDate = start.toISOString();
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        params.endDate = end.toISOString();
+      }
+
+      const res = await axios.get<Reading[]>("http://localhost:3000/api/readingsdynamic", { params });
+      setFilteredData(res.data);
+
+      if (res.data.length > 0) {
+        const firstCategory = Object.keys(res.data[0].data || {})[0];
+        if (firstCategory) {
+          setSelectedCategory(firstCategory);
+          const subcategories = Object.keys(res.data[0].data[firstCategory] || {});
+          setSelectedSubcategories(subcategories);
+        }
+      } else {
+        setSelectedCategory(null);
+        setSelectedSubcategories([]);
+      }
+    } catch (error) {
+      console.error("Date filtering failed:", error);
+    }
+  };
+
+  const toggleSubcategory = (sub: string) => {
+    setSelectedSubcategories(prev =>
+      prev.includes(sub) ? prev.filter(s => s !== sub) : [...prev, sub]
+    );
+  };
+
+  const getAllSubcategories = (): string[] => {
+    const subs = new Set<string>();
+    filteredData.forEach(entry => {
+      const catData = entry.data?.[selectedCategory!];
+      if (catData && typeof catData === "object") {
+        Object.keys(catData).forEach(sub => subs.add(sub));
+      }
+    });
+    return Array.from(subs);
+  };
+
+  return (
+    <div className="mx-3">
+      <div className='flex justify-between items-center'>
+        <h1 className="text-2xl font-bold ml-5">File View</h1>
+        <div className="flex gap-2 p-4">
+          <button className="bg-gray-300 px-4 py-2 rounded">Energy</button>
+          <Link to='/harmonics' className="bg-gray-300 px-4 py-2 rounded">Harmonics</Link>
+          <button className="bg-gray-300 px-4 py-2 rounded">Alarm</button>
+        </div>
+      </div>
+      <hr />
+
+      <div className="flex items-center gap-4 my-4">
+        <span className="font-semibold">Select Range</span>
+        <label className="flex items-center gap-2">
+          From
+          <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="p-1 border rounded" />
+        </label>
+        <label className="flex items-center gap-2">
+          To
+          <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="p-1 border rounded" />
+        </label>
+        <button className="bg-blue-600 text-white px-4 py-1 rounded" onClick={handleDateFilter}>Apply</button>
+      </div>
+
+      <div className="flex">
+        <div className="w-64 bg-gray-800 text-white p-4">
+          <select className="w-full mb-4 p-2 text-black rounded" value={selectedGateway} onChange={e => setSelectedGateway(e.target.value)}>
+            {gatewayIds.map(id => <option key={id} value={id}>{id}</option>)}
+          </select>
+          <h2 className="text-xl font-bold mb-4">Categories</h2>
+          {filteredData.length > 0 && Object.keys(filteredData[0].data || {}).map(category => (
+            <button
+              key={category}
+              onClick={() => {
+                setSelectedCategory(category);
+                setSelectedSubcategories([]);
+              }}
+              className={`block w-full text-left px-2 py-1 mb-1 rounded ${selectedCategory === category ? 'bg-gray-700' : 'hover:bg-gray-700'}`}
+            >
+              {category}
+            </button>
+          ))}
+          {selectedCategory && (
+            <div className="mt-4">
+              <h3 className="font-semibold mb-2">Subcategories</h3>
+              {getAllSubcategories().map(sub => (
+                <label key={sub} className="flex items-center gap-2 mb-1">
+                  <input type="checkbox" checked={selectedSubcategories.includes(sub)} onChange={() => toggleSubcategory(sub)} />
+                  {sub}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="flex-1 p-6">
+          <h2 className="text-2xl font-bold mb-4">Data Table</h2>
+          <table className="w-full bg-white rounded shadow">
+            <thead>
+              <tr className="bg-gray-200">
+                <th className="px-4 py-2 text-left">Date</th>
+                <th className="px-4 py-2 text-left">Time</th>
+                {selectedSubcategories.map(sub => (
+                  <th key={sub} className="px-4 py-2 text-left">{sub}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {filteredData.map((entry, index) => {
+                const dateObj = new Date(entry.timestamp);
+                const date = dateObj.toLocaleDateString();
+                const time = dateObj.toLocaleTimeString();
+                return (
+                  <tr key={index} className="border-t">
+                    <td className="px-4 py-2">{date}</td>
+                    <td className="px-4 py-2">{time}</td>
+                    {selectedSubcategories.map(sub => {
+                      const catData = entry.data?.[selectedCategory!];
+                      const value = catData && typeof catData === 'object' && sub in catData ? catData[sub] : "-";
+                      return <td key={sub} className="px-4 py-2">{value}</td>;
+                    })}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+  
