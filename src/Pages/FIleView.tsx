@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import FileViewChart from "../Components/FileViewChart";
 
-// Types for data structure
 interface ReadingData {
   [category: string]: {
     [subcategory: string]: number;
@@ -24,28 +24,58 @@ export default function App() {
   const [selectedSubcategories, setSelectedSubcategories] = useState<string[]>([]);
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
+  const [switchToChart, setSwitchToChart] = useState<string>('table');
+
+  // Fetch and restore state
+  const hasRestoredState = useRef(false);
 
   useEffect(() => {
+    const savedState = localStorage.getItem('fileViewState');
+    if (savedState) {
+      const parsed = JSON.parse(savedState);
+      setSelectedGateway(parsed.selectedGateway || '');
+      setSelectedCategory(parsed.selectedCategory || null);
+      setSelectedSubcategories(parsed.selectedSubcategories || []);
+      setStartDate(parsed.startDate || '');
+      setEndDate(parsed.endDate || '');
+      setSwitchToChart(parsed.switchToChart || 'table');
+      hasRestoredState.current = true; // flag restored
+    }
+
     const fetchData = async () => {
       const res = await axios.get<Reading[]>("http://localhost:3000/api/readingsdynamic");
       setAllData(res.data);
       const gateways = Array.from(new Set(res.data.map(d => d.gatewayId)));
       setGatewayIds(gateways);
-      if (gateways.length > 0) setSelectedGateway(gateways[0]);
     };
+
     fetchData();
   }, []);
 
+  // Filter by gateway
   useEffect(() => {
+    if (!selectedGateway) {
+      setFilteredData([]);
+      setSelectedCategory(null);
+      setSelectedSubcategories([]);
+      return;
+    }
+
     const dataForGateway = allData.filter(d => d.gatewayId === selectedGateway);
     setFilteredData(dataForGateway);
     setSelectedCategory(null);
     setSelectedSubcategories([]);
   }, [selectedGateway, allData]);
 
+  // Auto-select category/subcategories only if none are set
   useEffect(() => {
-    if (filteredData.length > 0) {
-      const firstCategory = Object.keys(filteredData[0].data || {})[0];
+    if (
+      filteredData.length > 0 &&
+      !selectedCategory &&
+      selectedSubcategories.length === 0 &&
+      !hasRestoredState.current
+    ) {
+      const firstCategory = Object.keys(filteredData[0]?.data || {})[0];
       if (firstCategory) {
         setSelectedCategory(firstCategory);
         const subcategories = Object.keys(filteredData[0].data[firstCategory] || {});
@@ -53,6 +83,23 @@ export default function App() {
       }
     }
   }, [filteredData]);
+
+  // Save filter state
+  useEffect(() => {
+    // Don't save until we have loaded gateway options
+    if (gatewayIds.length === 0) return;
+
+    const stateToSave = {
+      selectedGateway,
+      selectedCategory,
+      selectedSubcategories,
+      startDate,
+      endDate,
+      switchToChart
+    };
+    localStorage.setItem('fileViewState', JSON.stringify(stateToSave));
+  }, [selectedGateway, selectedCategory, selectedSubcategories, startDate, endDate, switchToChart, gatewayIds]);
+
 
   const handleDateFilter = async () => {
     try {
@@ -86,7 +133,17 @@ export default function App() {
       console.error("Date filtering failed:", error);
     }
   };
-
+  useEffect(() => {
+    if (
+      allData.length > 0 &&
+      selectedGateway &&
+      startDate &&
+      endDate &&
+      hasRestoredState.current
+    ) {
+      handleDateFilter();
+    }
+  }, [allData, selectedGateway, startDate, endDate]);
   const toggleSubcategory = (sub: string) => {
     setSelectedSubcategories(prev =>
       prev.includes(sub) ? prev.filter(s => s !== sub) : [...prev, sub]
@@ -116,7 +173,7 @@ export default function App() {
       </div>
       <hr />
 
-      <div className="flex items-center gap-4 my-4">
+      <div className="flex items-center mx-10  justify-between my-4 mt-10">
         <span className="font-semibold">Select Range</span>
         <label className="flex items-center gap-2">
           From
@@ -129,9 +186,10 @@ export default function App() {
         <button className="bg-blue-600 text-white px-4 py-1 rounded" onClick={handleDateFilter}>Apply</button>
       </div>
 
-      <div className="flex">
+      <div className="flex mt-10">
         <div className="w-64 bg-gray-800 text-white p-4">
           <select className="w-full mb-4 p-2 text-black rounded" value={selectedGateway} onChange={e => setSelectedGateway(e.target.value)}>
+            <option value="" disabled>Select Gateway</option>
             {gatewayIds.map(id => <option key={id} value={id}>{id}</option>)}
           </select>
           <h2 className="text-xl font-bold mb-4">Categories</h2>
@@ -160,40 +218,64 @@ export default function App() {
           )}
         </div>
 
-        <div className="flex-1 p-6">
-          <h2 className="text-2xl font-bold mb-4">Data Table</h2>
-          <table className="w-full bg-white rounded shadow">
-            <thead>
-              <tr className="bg-gray-200">
-                <th className="px-4 py-2 text-left">Date</th>
-                <th className="px-4 py-2 text-left">Time</th>
-                {selectedSubcategories.map(sub => (
-                  <th key={sub} className="px-4 py-2 text-left">{sub}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filteredData.map((entry, index) => {
-                const dateObj = new Date(entry.timestamp);
-                const date = dateObj.toLocaleDateString();
-                const time = dateObj.toLocaleTimeString();
-                return (
-                  <tr key={index} className="border-t">
-                    <td className="px-4 py-2">{date}</td>
-                    <td className="px-4 py-2">{time}</td>
-                    {selectedSubcategories.map(sub => {
-                      const catData = entry.data?.[selectedCategory!];
-                      const value = catData && typeof catData === 'object' && sub in catData ? catData[sub] : "-";
-                      return <td key={sub} className="px-4 py-2">{value}</td>;
-                    })}
+        {selectedGateway ? (
+          switchToChart === "table" ? (
+            <div className="w-full mx-3">
+              <div className="flex items-center justify-between mx-2">
+                <h2 className="text-2xl font-bold mb-4">Data Table</h2>
+                <button onClick={() => setSwitchToChart('chart')}>Switch To Chart</button>
+              </div>
+              <table className="w-full bg-white rounded shadow">
+                <thead>
+                  <tr className="bg-gray-200">
+                    <th className="px-4 py-2 text-left">Date</th>
+                    <th className="px-4 py-2 text-left">Time</th>
+                    {selectedSubcategories.map(sub => (
+                      <th key={sub} className="px-4 py-2 text-left">{sub}</th>
+                    ))}
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                </thead>
+                <tbody>
+                  {filteredData.map((entry, index) => {
+                    const dateObj = new Date(entry.timestamp);
+                    const date = dateObj.toLocaleDateString();
+                    const time = dateObj.toLocaleTimeString();
+                    return (
+                      <tr key={index} className="border-t">
+                        <td className="px-4 py-2">{date}</td>
+                        <td className="px-4 py-2">{time}</td>
+                        {selectedSubcategories.map(sub => {
+                          const catData = entry.data?.[selectedCategory!];
+                          const value = catData && typeof catData === 'object' && sub in catData ? catData[sub] : "-";
+                          return <td key={sub} className="px-4 py-2">{value}</td>;
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="w-[90%] mx-3">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold mb-4">Data Chart</h2>
+                <button onClick={() => setSwitchToChart('table')}>Switch To Table</button>
+              </div>
+              {selectedCategory && selectedSubcategories.length > 0 ? (
+                <FileViewChart
+                  data={filteredData}
+                  category={selectedCategory}
+                  subcategories={selectedSubcategories}
+                />
+              ) : (
+                <p className="text-gray-600">No data to display. Select a category and subcategories.</p>
+              )}
+            </div>
+          )
+        ) : (
+          <div className="text-gray-500">Please select a gateway to view data.</div>
+        )}
       </div>
     </div>
   );
 }
-  

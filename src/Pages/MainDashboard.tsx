@@ -168,7 +168,7 @@ const MainDashboard = () => {
 
 
       <div className="flex">
-        <div className='w-[100%] h-96'>
+        <div className='w-[100%]'>
           <RealTimeCharts selectedTitle={selectedTitle} />
         </div>
       </div>
