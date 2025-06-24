@@ -1,15 +1,31 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [gateways, setGateways] = useState<string[]>([]);
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleSelect = (value: string) => {
+  // Fetch gateways from API
+  useEffect(() => {
+    const fetchGateways = async () => {
+      try {
+        const res = await axios.get<string[]>("http://localhost:3000/api/gateways");
+        setGateways(res.data);
+      } catch (error) {
+        console.error("Failed to fetch gateways:", error);
+      }
+    };
+
+    fetchGateways();
+  }, []);
+
+  const handleSelectGateway = (gateway: string) => {
     setDropdownOpen(false);
     const params = new URLSearchParams(location.search);
-    params.set('option', value);
+    params.set('gateway', gateway);
     navigate({ search: params.toString() });
   };
 
@@ -31,48 +47,32 @@ const Navbar = () => {
               onClick={() => setDropdownOpen(!dropdownOpen)}
               className="flex items-center gap-1 hover:text-blue-600"
             >
-              Dropdown
+              Select Gateway
               <svg className="w-4 h-4" viewBox="0 0 10 6" fill="none">
                 <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </button>
 
             {dropdownOpen && (
-              <div className="absolute right-0 mt-2 w-44 bg-white dark:bg-gray-700 rounded shadow z-10">
-                <ul className="py-2 text-sm text-gray-700 dark:text-gray-200">
-                  <li>
-                    <button onClick={() => handleSelect('dashboard')} className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600">
-                      Dashboard
-                    </button>
-                  </li>
-                  <li>
-                    <button onClick={() => handleSelect('settings')} className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600">
-                      Settings
-                    </button>
-                  </li>
-                  <li>
-                    <button onClick={() => handleSelect('earnings')} className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600">
-                      Earnings
-                    </button>
-                  </li>
-                </ul>
-                <div className="border-t dark:border-gray-600">
-                  <button onClick={() => handleSelect('signout')} className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600">
-                    Sign out
-                  </button>
-                </div>
+              <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-gray-700 rounded shadow z-10 max-h-64 overflow-y-auto">
+                {gateways.length > 0 ? (
+                  <ul className="py-2 text-sm text-gray-700 dark:text-gray-200">
+                    {gateways.map((gateway) => (
+                      <li key={gateway}>
+                        <button
+                          onClick={() => handleSelectGateway(gateway)}
+                          className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600"
+                        >
+                          {gateway}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="p-4 text-gray-500 dark:text-gray-300">No gateways found</div>
+                )}
               </div>
             )}
-          </li>
-
-          <li>
-            <a href="#" className="hover:text-blue-600">Services</a>
-          </li>
-          <li>
-            <a href="#" className="hover:text-blue-600">Pricing</a>
-          </li>
-          <li>
-            <a href="#" className="hover:text-blue-600">Contact</a>
           </li>
         </ul>
       </div>
