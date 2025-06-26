@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 
 const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -23,12 +23,11 @@ const Navbar = () => {
   }, []);
 
   const handleSelectGateway = (gateway: string) => {
-    setDropdownOpen(false);
-    const params = new URLSearchParams(location.search);
-    params.set('gateway', gateway);
-    navigate({ search: params.toString() });
-  };
-
+  setDropdownOpen(false);
+  const params = new URLSearchParams();
+  params.set('gateway', gateway);
+  navigate(`/maindashboard?${params.toString()}`);
+};
   return (
     <nav className="bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
       <div className="max-w-screen-xl mx-auto p-4 flex items-center justify-between">

@@ -1,79 +1,71 @@
 import React, { useEffect, useState } from "react";
 import Chart from "react-apexcharts";
-import { useSocket } from "../hooks/useSocket"; // adjust path
+import { useSocket } from "../hooks/useSocket";
+import { useLocation } from "react-router-dom";
 
 type RealTimeChartProps = {
   selectedTitle: string | null;
 };
 
 type Reading = {
-  voltageLN: { v1: number; v2: number; v3: number };
-  voltageLL: { v12: number; v23: number; v31: number };
-  current: { i1: number; i2: number; i3: number };
-  frequency: { f1: number; f2: number; f3: number };
-  activePower: { pl1: number; pl2: number; pl3: number };
-  reactivePower: { ql1: number; ql2: number; ql3: number };
-  apparentPower: { sl1: number; sl2: number; sl3: number };
-  cos: { cosl1: number; cosl2: number; cosl3: number };
+  gatewayId: string;
+  timestamp: string;
+  data: {
+    [category: string]: {
+      [label: string]: number;
+    };
+  };
 };
 
-const keyMap: Record<string, keyof Reading> = {
-  "Voltage(L-N)": "voltageLN",
-  "Voltage(L-L)": "voltageLL",
-  "Current": "current",
-  "Frequency": "frequency",
-  "Active Power": "activePower",
-  "Reactive Power": "reactivePower",
-  "Apparent Power": "apparentPower",
-  "Cos": "cos",
-};
-
-const RealTImeCharts: React.FC<RealTimeChartProps> = ({ selectedTitle }) => {
+const RealTimeCharts: React.FC<RealTimeChartProps> = ({ selectedTitle }) => {
   const [reading, setReading] = useState<Reading | null>(null);
   const [series, setSeries] = useState<any[]>([]);
-  // const [labels, setLabels] = useState<string[]>([]);
   const [timestamps, setTimestamps] = useState<string[]>([]);
 
+  // Get gateway from query string
+  const location = useLocation();
+  const query = new URLSearchParams(location.search);
+  const gatewayId = query.get("gateway");
+
+  // Socket hook
   useSocket((data: Reading) => {
     setReading(data);
-  });
+  }, gatewayId);
 
- useEffect(() => {
-  if (reading && selectedTitle && keyMap[selectedTitle]) {
-    const sectionKey = keyMap[selectedTitle];
-    const sectionData = reading[sectionKey];
+  // Chart update
+  useEffect(() => {
+    if (!reading || !selectedTitle) return;
+
+    const categoryData = reading.data?.[selectedTitle];
+    if (!categoryData) return;
 
     const currentTime = new Date().toLocaleTimeString();
+    setTimestamps((prev) => [...prev, currentTime].slice(-15));
 
-    setTimestamps(prev => [...prev, currentTime].slice(-15));
-
-    setSeries(prevSeries => {
-      return Object.entries(sectionData).map(([label, value]) => {
-        const upperLabel = label.toUpperCase();
-        const existing = prevSeries.find(s => s.name === upperLabel);
+    setSeries((prevSeries) => {
+      return Object.entries(categoryData).map(([label, value]) => {
+        const existing = prevSeries.find((s) => s.name === label);
         const updatedData = existing ? [...existing.data, value] : [value];
 
         return {
-          name: upperLabel,
+          name: label,
           data: updatedData.slice(-15),
         };
       });
     });
-  }
-}, [reading, selectedTitle]);
+  }, [reading, selectedTitle]);
 
-
-
+  // Apex chart options
   const options: ApexCharts.ApexOptions = {
     chart: {
       type: "line",
       height: 350,
-       toolbar: {
-      show: false, // 👈 this hides the entire toolbar
-    },
+      toolbar: {
+        show: false,
+      },
     },
     xaxis: {
-      categories:timestamps, // static since it's real-time (or use timestamps)
+      categories: timestamps,
     },
     stroke: {
       curve: "smooth",
@@ -88,10 +80,10 @@ const RealTImeCharts: React.FC<RealTimeChartProps> = ({ selectedTitle }) => {
       {series.length > 0 ? (
         <Chart options={options} series={series} type="line" height={400} />
       ) : (
-        <p>Waiting for {selectedTitle || "data"}...</p>
+        <p className="text-gray-500 text-sm">Waiting for {selectedTitle || "data"}...</p>
       )}
     </div>
   );
 };
 
-export default RealTImeCharts;
+export default RealTimeCharts;

@@ -1,105 +1,69 @@
-import { useState } from 'react'
+import { useState , useEffect
+  
+ } from 'react'
 import { useSocket } from '../hooks/useSocket'; // adjust path if needed
 import RealTimeCharts from '../Components/RealTImeCharts';
-import { Link } from 'react-router-dom';
+import { Link ,  useLocation  } from 'react-router-dom';
 
 // Reading type based on socket data
 type Reading = {
-  voltageLN: { v1: number; v2: number; v3: number };
-  voltageLL: { v12: number; v23: number; v31: number };
-  current: { i1: number; i2: number; i3: number };
-  frequency: { f1: number; f2: number; f3: number };
-  activePower: { pl1: number; pl2: number; pl3: number };
-  reactivePower: { ql1: number; ql2: number; ql3: number };
-  apparentPower: { sl1: number; sl2: number; sl3: number };
-  cos: { cosl1: number; cosl2: number; cosl3: number };
-  _id?: string;
-  createdAt?: string;
-  __v?: number;
+  gatewayId: string;
+  timestamp: string;
+  data: {
+    [category: string]: {
+      [label: string]: number;
+    };
+  };
 };
 
 const MainDashboard = () => {
-  const [selectedTitle, setSelectedTitle] = useState<string | null>("Voltage(L-N)");
+  const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
   const [reading, setReading] = useState<Reading | null>(null);
+  const location = useLocation();
+const inferUnitFromLabel = (label: string): string => {
+  const lower = label.toLowerCase();
+  if (lower.includes('v')) return 'volt';
+  if (lower.includes('i') || lower.includes('amp')) return 'amp';
+  if (lower.includes('pf') || lower.includes('cos')) return 'cos';
+  if (lower.includes('hz') || lower.includes('f')) return 'Hz';
+  if (lower.includes('w')) return 'Watt';
+  if (lower.includes('va')) return 'VA';
+  return '';
+};
+   // 🔥 Get gatewayId from URL
+  const query = new URLSearchParams(location.search);
+  const gatewayId = query.get("gateway");
 
   // 🧠 Use the reusable socket hook
+  // 🔌 Pass gatewayId to socket
   useSocket((data: Reading) => {
     setReading(data);
-  });
-  const sections = reading
-    ? [
-      {
-        title: 'Voltage(L-N)',
-        values: [
-          { label: 'VL1', value: reading.voltageLN.v1, unit: 'volt' },
-          { label: 'VL2', value: reading.voltageLN.v2, unit: 'volt' },
-          { label: 'VL3', value: reading.voltageLN.v3, unit: 'volt' },
-        ],
-      },
-      {
-        title: 'Voltage(L-L)',
-        values: [
-          { label: 'VL12', value: reading.voltageLL.v12, unit: 'volt' },
-          { label: 'VL23', value: reading.voltageLL.v23, unit: 'volt' },
-          { label: 'VL31', value: reading.voltageLL.v31, unit: 'volt' },
-        ],
-      },
-      {
-        title: 'Current',
-        values: [
-          { label: 'IL1', value: reading.current.i1, unit: 'amp' },
-          { label: 'IL2', value: reading.current.i2, unit: 'amp' },
-          { label: 'IL3', value: reading.current.i3, unit: 'amp' },
-        ],
-      },
-      {
-        title: 'Frequency',
-        values: [
-          { label: 'FL1', value: reading.frequency.f1, unit: 'Hz' },
-          { label: 'FL2', value: reading.frequency.f2, unit: 'Hz' },
-          { label: 'FL3', value: reading.frequency.f3, unit: 'Hz' },
-        ],
-      },
-      {
-        title: 'Active Power',
-        values: [
-          { label: 'PL1', value: reading.activePower.pl1, unit: 'Watt' },
-          { label: 'PL2', value: reading.activePower.pl2, unit: 'Watt' },
-          { label: 'PL3', value: reading.activePower.pl3, unit: 'Watt' },
-        ],
-      },
-      {
-        title: 'Reactive Power',
-        values: [
-          { label: 'QL1', value: reading.reactivePower.ql1, unit: 'Watt' },
-          { label: 'QL2', value: reading.reactivePower.ql2, unit: 'Watt' },
-          { label: 'QL3', value: reading.reactivePower.ql3, unit: 'Watt' },
-        ],
-      },
-      {
-        title: 'Apparent Power',
-        values: [
-          { label: 'SL1', value: reading.apparentPower.sl1, unit: 'VA' },
-          { label: 'SL2', value: reading.apparentPower.sl2, unit: 'VA' },
-          { label: 'SL3', value: reading.apparentPower.sl3, unit: 'VA' },
-        ],
-      },
-      {
-        title: 'Cos',
-        values: [
-          { label: 'CosL1', value: reading.cos.cosl1, unit: 'Deg' },
-          { label: 'CosL2', value: reading.cos.cosl2, unit: 'Deg' },
-          { label: 'CosL3', value: reading.cos.cosl3, unit: 'Deg' },
-        ],
-      },
-    ]
-    : [];
+  }, gatewayId);
+  const sections = reading?.data
+  ? Object.entries(reading.data).map(([category, subObj]) => ({
+      title: category,
+      values: Object.entries(subObj).map(([label, value]) => ({
+        label,
+        value,
+        unit: inferUnitFromLabel(label) // dynamic unit assignment
+      }))
+    }))
+  : [];
+
+  useEffect(() => {
+  if (reading?.data && !selectedTitle) {
+    const firstCategory = Object.keys(reading.data)[0];
+    if (firstCategory) {
+      setSelectedTitle(firstCategory);
+    }
+  }
+}, [reading, selectedTitle]);
 
   return (
     <div>
       <div className='flex justify-between items-center'>
         <div>
-          <h1 className="text-2xl font-bold ml-5">Main Dashboard</h1>
+          <h1 className="text-2xl font-bold ml-5">{gatewayId}</h1>
         </div>
 
         <div className="flex gap-2 p-4">
@@ -109,7 +73,7 @@ const MainDashboard = () => {
           <Link to='/harmonics' className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
             Harmonics
           </Link>
-          <Link to='/fileview' className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+          <Link to={`/fileview/${gatewayId}`} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
             File View
           </Link>
           <button className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">

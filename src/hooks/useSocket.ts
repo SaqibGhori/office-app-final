@@ -1,35 +1,32 @@
-// src/hooks/useSocket.ts
-
-import { useEffect, useRef, useCallback } from 'react';
+// hooks/useSocket.ts
+import { useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 
-type ReadingHandler = (data: any) => void;
+const SOCKET_URL = 'http://localhost:3000';
 
-export function useSocket(onReading?: ReadingHandler): Socket | null {
+export const useSocket = <T>(
+  onData: (data: T) => void,
+  gatewayId: string | null
+) => {
   const socketRef = useRef<Socket | null>(null);
 
-  const onMessage = useCallback((data: any) => {
-    onReading?.(data);
-  }, [onReading]);
-
   useEffect(() => {
-    const url = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000';
+    if (!gatewayId) return;
 
-    // transports: ['websocket'] ensures no polling, only WS
-    socketRef.current = io(url, {
-      transports: ['websocket'],
-      path: '/socket.io',
+    const socket = io(SOCKET_URL, {
+      query: { gatewayId },
     });
 
-    socketRef.current.on('connect', () => {
-      console.log('🔗 Socket connected:', socketRef.current!.id);
+    socketRef.current = socket;
+
+    socket.on('new-reading', (data) => {
+      if (data.gatewayId === gatewayId) {
+        onData(data);
+      }
     });
-    socketRef.current.on('new-reading', onMessage);
 
     return () => {
-      socketRef.current?.disconnect();
+      socket.disconnect();
     };
-  }, [onMessage]);
-
-  return socketRef.current;
-}
+  }, [gatewayId]);
+};
