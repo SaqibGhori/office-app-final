@@ -6,6 +6,7 @@ import Phase2 from './Pages/Phase2';
 import Phase3 from './Pages/Phase3';
 // import Test from './Pages/Test';
 import Harmonics from './Pages/Harmonics';
+import Alaram from './Pages/Alaram';
 
 // import SettingsPage from './pages/SettingsPage';
 // import AnalyticsPage from './pages/AnalyticsPage';
@@ -20,6 +21,7 @@ function App() {
           <Route path="/maindashboard" element={<MainDashboard/>} />
           <Route path="/fileview/:gatewayId" element={<FIleView/>} />
           <Route path="/harmonics" element={<Harmonics/>} />
+          <Route path="/alaram/:gatewayId" element={<Alaram/>} />
           {/* <Route path="/test" element={<Test/>} /> */}
 
           
