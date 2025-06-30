@@ -1,32 +1,27 @@
-// hooks/useSocket.ts
-import { useEffect, useRef } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { useEffect, useRef } from 'react'
+import { io, Socket } from 'socket.io-client'
 
-const SOCKET_URL = 'http://localhost:3000';
+let sharedSocket: Socket
 
-export const useSocket = <T>(
-  onData: (data: T) => void,
-  gatewayId: string | null
-) => {
-  const socketRef = useRef<Socket | null>(null);
+export function getSocket() {
+  if (!sharedSocket) {
+    sharedSocket = io('http://localhost:3000', {
+      transports: ['websocket'],  // ← disable polling
+      path: '/socket.io',
+    })
+  }
+  return sharedSocket
+}
+
+export function useSocket(onReading?: (data:any)=>void) {
+  const socket = useRef(getSocket()).current
 
   useEffect(() => {
-    if (!gatewayId) return;
-
-    const socket = io(SOCKET_URL, {
-      query: { gatewayId },
-    });
-
-    socketRef.current = socket;
-
-    socket.on('new-reading', (data) => {
-      if (data.gatewayId === gatewayId) {
-        onData(data);
-      }
-    });
-
+    if (onReading) socket.on('new-reading', onReading)
     return () => {
-      socket.disconnect();
-    };
-  }, [gatewayId]);
-};
+      if (onReading) socket.off('new-reading', onReading)
+    }
+  }, [onReading, socket])
+
+  return socket
+}
