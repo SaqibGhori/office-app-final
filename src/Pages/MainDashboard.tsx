@@ -3,6 +3,7 @@ import { useState , useEffect
  } from 'react'
 import { useSocket } from '../hooks/useSocket'; // adjust path if needed
 import RealTimeCharts from '../Components/RealTImeCharts';
+import { useParams } from "react-router-dom";
 import { Link ,  useLocation  } from 'react-router-dom';
 
 // Reading type based on socket data
@@ -19,7 +20,7 @@ type Reading = {
 const MainDashboard = () => {
   const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
   const [reading, setReading] = useState<Reading | null>(null);
-  const location = useLocation();
+  // const location = useLocation();
 const inferUnitFromLabel = (label: string): string => {
   const lower = label.toLowerCase();
   if (lower.includes('v')) return 'volt';
@@ -31,14 +32,14 @@ const inferUnitFromLabel = (label: string): string => {
   return '';
 };
    // 🔥 Get gatewayId from URL
-  const query = new URLSearchParams(location.search);
-  const gatewayId = query.get("gateway");
-
-  // 🧠 Use the reusable socket hook
-  // 🔌 Pass gatewayId to socket
+  const { search } = useLocation();
+  const query = new URLSearchParams(search);
+  const gatewayId = query.get("gateway") || undefined;  // <— here
   useSocket((data: Reading) => {
     setReading(data);
   }, gatewayId);
+console.log(gatewayId , "moiz")
+
   const sections = reading?.data
   ? Object.entries(reading.data).map(([category, subObj]) => ({
       title: category,
@@ -67,17 +68,18 @@ const inferUnitFromLabel = (label: string): string => {
         </div>
 
         <div className="flex gap-2 p-4">
-          <button className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
-            Energy
-          </button>
+          
           <Link to='/harmonics' className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
             Harmonics
           </Link>
-          <Link to={`/fileview/${gatewayId}`} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+          <Link to={`/fileview?gateway=${gatewayId}`} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
             File View
           </Link>
-          <Link to={`/alaram/${gatewayId}`} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+          <Link to={`/alaram?gateway=${gatewayId}`} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
             Alaram
+          </Link>
+          <Link to={`/settings?gateway=${gatewayId}`} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+            settings
           </Link>
         </div>
       </div>
