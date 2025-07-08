@@ -7,6 +7,8 @@ const Navbar = () => {
   const [gateways, setGateways] = useState<string[]>([]);
   const navigate = useNavigate();
   const location = useLocation();
+  const { search } = useLocation();
+  const gatewayId = new URLSearchParams(search).get("gateway");
 
   // Fetch gateways from API
   useEffect(() => {
@@ -23,11 +25,11 @@ const Navbar = () => {
   }, []);
 
   const handleSelectGateway = (gateway: string) => {
-  setDropdownOpen(false);
-  const params = new URLSearchParams();
-  params.set('gateway', gateway);
-  navigate(`/maindashboard?${params.toString()}`);
-};
+    setDropdownOpen(false);
+    const params = new URLSearchParams();
+    params.set('gateway', gateway);
+    navigate(`/maindashboard?${params.toString()}`);
+  };
   return (
     <nav className="bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
       <div className="max-w-screen-xl mx-auto p-4 flex items-center justify-between">
@@ -38,9 +40,20 @@ const Navbar = () => {
 
         <ul className="flex items-center space-x-6 text-gray-900 dark:text-white font-medium">
           <li>
-            <a href="#" className="hover:text-blue-600">Home</a>
+            <Link to='/' className="hover:text-blue-600">Home</Link>
           </li>
-
+          <Link to={`/maindashboard${gatewayId ? `?gateway=${gatewayId}` : ""}`}>
+            Dashboard
+          </Link>
+          <Link to={`/fileview${gatewayId ? `?gateway=${gatewayId}` : ""}`} >
+            File View
+          </Link>
+          <Link to={`/settings${gatewayId ? `?gateway=${gatewayId}` : ""}`}>
+            Settings
+          </Link>
+          <Link to={`/alaram${gatewayId ? `?gateway=${gatewayId}` : ""}`}>
+            Alarms
+          </Link>
           <li className="relative">
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}

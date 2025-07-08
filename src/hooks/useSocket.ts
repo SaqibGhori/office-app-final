@@ -23,28 +23,21 @@ export function useSocket(
 ): Socket {
   const socket = useRef<Socket>(getSocket()).current;
 
-  useEffect(() => {
-    // 1) Room join
-    if (gatewayId) {
-      socket.emit("join-gateway", gatewayId);
-    }
+useEffect(() => {
+    if (!onReading || !gatewayId) return;   // only bind if gatewayId present
 
-    // 2) Event subscribe
-    if (onReading) {
-      socket.on("new-reading", onReading);
-    }
-
-    return () => {
-      // 3) Cleanup subscribe
-      if (onReading) {
-        socket.off("new-reading", onReading);
-      }
-      // 4) Room leave
-      if (gatewayId) {
-        socket.emit("leave-gateway", gatewayId);
+    const handler = (data: any) => {
+      if (data.gatewayId === gatewayId) {
+        onReading(data);
       }
     };
+
+    socket.on('new-reading', handler);
+    return () => {
+      socket.off('new-reading', handler);
+    };
   }, [onReading, socket, gatewayId]);
+
 
   return socket;
 }

@@ -25,7 +25,7 @@ const RealTimeCharts: React.FC<RealTimeChartProps> = ({ selectedTitle }) => {
   // Get gateway from query string
   const location = useLocation();
   const query = new URLSearchParams(location.search);
-  const gatewayId = query.get("gateway");
+ const gatewayId = query.get("gateway") || undefined;  // <— here
 
   // Socket hook
   useSocket((data: Reading) => {

@@ -105,7 +105,7 @@ export default function App() {
       category: "",
       subs: "",
     });
-    navigate(`/fileview/${value}`);
+    navigate(`/fileview${value ? `?gateway=${value}` : ""}`);
   };
 
   const toggleSubcategory = (sub: string) => {

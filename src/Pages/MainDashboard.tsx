@@ -34,7 +34,7 @@ const inferUnitFromLabel = (label: string): string => {
    // 🔥 Get gatewayId from URL
   const { search } = useLocation();
   const query = new URLSearchParams(search);
-  const gatewayId = query.get("gateway") || undefined;  // <— here
+  const gatewayId = query.get("gateway") || "";  // <— here
   useSocket((data: Reading) => {
     setReading(data);
   }, gatewayId);
@@ -65,6 +65,7 @@ console.log(gatewayId , "moiz")
       <div className='flex justify-between items-center'>
         <div>
           <h1 className="text-2xl font-bold ml-5">{gatewayId}</h1>
+          <h1>Gateway: {gatewayId || "Select a gateway"}</h1>
         </div>
 
         <div className="flex gap-2 p-4">

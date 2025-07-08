@@ -8,6 +8,7 @@ import Phase3 from './Pages/Phase3';
 import Harmonics from './Pages/Harmonics';
 import Alaram from './Pages/Alaram';
 import Settings from './Pages/Settings';
+import Home from './Pages/Home';
 
 // import SettingsPage from './pages/SettingsPage';
 // import AnalyticsPage from './pages/AnalyticsPage';
@@ -19,6 +20,7 @@ function App() {
       <Routes>
         {/* All routes that should have the sidebar */}
         <Route element={<DashboardLayout/>}>
+          <Route path="/" element={<Home/>} />
           <Route path="/maindashboard" element={<MainDashboard/>} />
           <Route path="/fileview" element={<FIleView/>} />
           <Route path="/harmonics" element={<Harmonics/>} />
