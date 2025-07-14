@@ -9,40 +9,36 @@ import Harmonics from './Pages/Harmonics';
 import Alaram from './Pages/Alaram';
 import Settings from './Pages/Settings';
 import Home from './Pages/Home';
-
-// import SettingsPage from './pages/SettingsPage';
-// import AnalyticsPage from './pages/AnalyticsPage';
-// import NotFoundPage from './pages/NotFoundPage';
+import { DataProvider } from './context/DataContext';
 
 function App() {
   return (
     <Router>
-      <Routes>
-        {/* All routes that should have the sidebar */}
-        <Route element={<DashboardLayout/>}>
-          <Route path="/" element={<Home/>} />
-          <Route path="/maindashboard" element={<MainDashboard/>} />
-          <Route path="/fileview" element={<FIleView/>} />
-          <Route path="/harmonics" element={<Harmonics/>} />
-          <Route path="/alaram" element={<Alaram/>} />
-          <Route path="/settings" element={<Settings/>} />
-          {/* <Route path="/test" element={<Test/>} /> */}
+      <DataProvider>
+        <Routes>
+          {/* All routes that should have the sidebar */}
+          <Route element={<DashboardLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/maindashboard" element={<MainDashboard />} />
+            <Route path="/fileview" element={<FIleView />} />
+            <Route path="/harmonics" element={<Harmonics />} />
+            <Route path="/alaram" element={<Alaram />} />
+            <Route path="/settings" element={<Settings />} />
 
-          
-          {/* <Route path="/analytics" element={<AnalyticsPage />} />
-          <Route path="/settings" element={<SettingsPage />} /> */}
 
-          <Route path="/phase2" element={<Phase2/> } />
-          <Route path="/phase3" element={<Phase3/>} />
+            <Route path="/phase2" element={<Phase2 />} />
+            <Route path="/phase3" element={<Phase3 />} />
 
-        </Route>
-        
-        {/* Routes without sidebar (if needed) */}
-        {/* <Route path="/login" element={<LoginPage />} /> */}
-        
-        {/* 404 page */}
-        {/* <Route path="*" element={<NotFoundPage />} /> */}
-      </Routes>
+          </Route>
+
+          {/* Routes without sidebar (if needed) */}
+          {/* <Route path="/login" element={<LoginPage />} /> */}
+
+          {/* 404 page */}
+          {/* <Route path="*" element={<NotFoundPage />} /> */}
+        </Routes>
+      </DataProvider>
+
     </Router>
   );
 }

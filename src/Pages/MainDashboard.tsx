@@ -1,146 +1,86 @@
-import { useState , useEffect
-  
- } from 'react'
-import { useSocket } from '../hooks/useSocket'; // adjust path if needed
-import RealTimeCharts from '../Components/RealTImeCharts';
-import { useParams } from "react-router-dom";
-import { Link ,  useLocation  } from 'react-router-dom';
+// src/pages/MainDashboard.tsx
+import React, { useState, useEffect } from "react";
+import { useData } from "../context/DataContext";
+import RealTimeCharts from "../Components/RealTImeCharts";
+import { Link } from "react-router-dom";
 
-// Reading type based on socket data
-type Reading = {
-  gatewayId: string;
-  timestamp: string;
-  data: {
-    [category: string]: {
-      [label: string]: number;
-    };
-  };
+type Section = {
+  title: string;
+  values: { label: string; value: number; unit: string }[];
 };
 
-const MainDashboard = () => {
+export default function MainDashboard() {
+  const { gatewayId, reading } = useData();
   const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
-  const [reading, setReading] = useState<Reading | null>(null);
-  // const location = useLocation();
-const inferUnitFromLabel = (label: string): string => {
-  const lower = label.toLowerCase();
-  if (lower.includes('v')) return 'volt';
-  if (lower.includes('i') || lower.includes('amp')) return 'amp';
-  if (lower.includes('pf') || lower.includes('cos')) return 'cos';
-  if (lower.includes('hz') || lower.includes('f')) return 'Hz';
-  if (lower.includes('w')) return 'Watt';
-  if (lower.includes('va')) return 'VA';
-  return '';
-};
-   // 🔥 Get gatewayId from URL
-  const { search } = useLocation();
-  const query = new URLSearchParams(search);
-  const gatewayId = query.get("gateway") || "";  // <— here
-  useSocket((data: Reading) => {
-    setReading(data);
-  }, gatewayId);
-console.log(gatewayId , "moiz")
 
-  const sections = reading?.data
-  ? Object.entries(reading.data).map(([category, subObj]) => ({
-      title: category,
-      values: Object.entries(subObj).map(([label, value]) => ({
-        label,
-        value,
-        unit: inferUnitFromLabel(label) // dynamic unit assignment
+  const inferUnitFromLabel = (label: string) => {
+    const lower = label.toLowerCase();
+    if (lower.includes("v")) return "volt";
+    if (lower.includes("i") || lower.includes("amp")) return "amp";
+    if (lower.includes("pf") || lower.includes("cos")) return "cos";
+    if (lower.includes("hz") || lower.includes("f")) return "Hz";
+    if (lower.includes("w")) return "Watt";
+    if (lower.includes("va")) return "VA";
+    return "";
+  };
+
+  const sections: Section[] = reading?.data
+    ? Object.entries(reading.data).map(([category, subObj]) => ({
+        title: category,
+        values: Object.entries(subObj).map(([label, value]) => ({
+          label,
+          value,
+          unit: inferUnitFromLabel(label),
+        })),
       }))
-    }))
-  : [];
+    : [];
 
   useEffect(() => {
-  if (reading?.data && !selectedTitle) {
-    const firstCategory = Object.keys(reading.data)[0];
-    if (firstCategory) {
-      setSelectedTitle(firstCategory);
+    if (reading && !selectedTitle) {
+      const firstCat = Object.keys(reading.data)[0];
+      if (firstCat) setSelectedTitle(firstCat);
     }
-  }
-}, [reading, selectedTitle]);
+  }, [reading, selectedTitle]);
 
   return (
     <div>
-      <div className='flex justify-between items-center'>
-        <div>
-          <h1 className="text-2xl font-bold ml-5">{gatewayId}</h1>
-          <h1>Gateway: {gatewayId || "Select a gateway"}</h1>
-        </div>
-
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold ml-5">
+          Gateway: {gatewayId || "Select a gateway"}
+        </h1>
         <div className="flex gap-2 p-4">
-          
-          <Link to='/harmonics' className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
-            Harmonics
-          </Link>
-          <Link to={`/fileview?gateway=${gatewayId}`} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
-            File View
-          </Link>
-          <Link to={`/alaram?gateway=${gatewayId}`} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
-            Alaram
-          </Link>
-          <Link to={`/settings?gateway=${gatewayId}`} className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
-            settings
-          </Link>
+          <Link to={`/harmonics?gateway=${gatewayId}`}>Harmonics</Link>
+          <Link to={`/fileview?gateway=${gatewayId}`}>File View</Link>
+          <Link to={`/alaram?gateway=${gatewayId}`}>Alaram</Link>
+          <Link to={`/settings?gateway=${gatewayId}`}>Settings</Link>
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 p-4">
         {reading
-          ? sections.map((section, sectionIndex) => (
-            <div
-              key={sectionIndex}
-              onClick={() => {
-                setSelectedTitle(section.title);
-                console.log("Clicked card title:", section.title);
-              }}
-              className="bg-white rounded-lg shadow p-4"
-            >
-              <h2 className="text-lg font-semibold mb-3 text-gray-700 border-b pb-2">
-                {section.title}
-              </h2>
-              <div className="space-y-2">
-                {section.values.map((item, itemIndex) => (
-                  <div
-                    key={itemIndex}
-                    className="flex justify-between items-center"
-                  >
-                    <span className="text-gray-600 w-16">{item.label}</span>
-                    <div className="flex-1 flex items-center justify-end">
-                      <span className="text-gray-800 font-mono mr-1">
-                        {item.value}
-                      </span>
-                      <span className="text-gray-500 text-sm">{item.unit}</span>
-                    </div>
+          ? sections.map((sec, idx) => (
+              <div
+                key={idx}
+                onClick={() => setSelectedTitle(sec.title)}
+                className="bg-white rounded-lg shadow p-4"
+              >
+                <h2 className="font-semibold mb-2">{sec.title}</h2>
+                {sec.values.map((item, i) => (
+                  <div key={i} className="flex justify-between">
+                    <span>{item.label}</span>
+                    <span className="font-mono">
+                      {item.value} {item.unit}
+                    </span>
                   </div>
                 ))}
               </div>
-            </div>
-          ))
-          : // 👇 Skeleton Loader
-          Array.from({ length: 8 }).map((_, index) => (
-            <div
-              key={index}
-              className="bg-white rounded-lg shadow p-4 animate-pulse space-y-4"
-            >
-              <div className="h-5 bg-gray-300 rounded w-1/2 mb-2"></div>
-              <div className="space-y-2">
-                <div className="h-4 bg-gray-200 rounded w-full"></div>
-                <div className="h-4 bg-gray-200 rounded w-full"></div>
-                <div className="h-4 bg-gray-200 rounded w-full"></div>
-              </div>
-            </div>
-          ))}
+            ))
+          : Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className="animate-pulse bg-gray-200 h-32 rounded" />
+            ))}
       </div>
 
-
-      <div className="flex">
-        <div className='w-[100%]'>
-          <RealTimeCharts selectedTitle={selectedTitle} />
-        </div>
-      </div>
+      <RealTimeCharts selectedTitle={selectedTitle} />
     </div>
   );
-};
-
-export default MainDashboard;
+}
