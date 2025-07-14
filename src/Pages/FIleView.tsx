@@ -41,7 +41,7 @@ export default function FileView() {
     });
     setSearchParams(updated);
   };
-
+console.log("hello saqib")
   // init gateway from URL
   useEffect(() => {
     if (gatewayId && !selectedGateway) {
