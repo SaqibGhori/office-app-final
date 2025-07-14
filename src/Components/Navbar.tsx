@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 
 const Navbar = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [gateways, setGateways] = useState<string[]>([]);
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const location = useLocation();
   const { search } = useLocation();
   const gatewayId = new URLSearchParams(search).get("gateway");
@@ -24,12 +24,12 @@ const Navbar = () => {
     fetchGateways();
   }, []);
 
-  const handleSelectGateway = (gateway: string) => {
-    setDropdownOpen(false);
-    const params = new URLSearchParams();
-    params.set('gateway', gateway);
-    navigate(`/maindashboard?${params.toString()}`);
-  };
+  // const handleSelectGateway = (gateway: string) => {
+  //   setDropdownOpen(false);
+  //   const params = new URLSearchParams();
+  //   params.set('gateway', gateway);
+  //   navigate(`/maindashboard?${params.toString()}`);
+  // };
   return (
     <nav className="bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
       <div className="max-w-screen-xl mx-auto p-4 flex items-center justify-between">
@@ -54,7 +54,7 @@ const Navbar = () => {
           <Link to={`/alaram${gatewayId ? `?gateway=${gatewayId}` : ""}`}>
             Alarms
           </Link>
-          <li className="relative">
+          {/* <li className="relative">
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
               className="flex items-center gap-1 hover:text-blue-600"
@@ -85,7 +85,7 @@ const Navbar = () => {
                 )}
               </div>
             )}
-          </li>
+          </li> */}
         </ul>
       </div>
     </nav>
