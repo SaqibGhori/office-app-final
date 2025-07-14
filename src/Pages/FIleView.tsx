@@ -13,10 +13,10 @@ interface Reading {
   data: ReadingData;
 }
 
-export default function FileView() {
+export default function App() {
   const [allData, setAllData] = useState<Reading[]>([]);
-  const [filteredData, setFilteredData] = useState<Reading[]>([]);
   const [gatewayIds, setGatewayIds] = useState<string[]>([]);
+  const [filteredData, setFilteredData] = useState<Reading[]>([]);
   const [totalCount, setTotalCount] = useState(0);
 
   const { gatewayId } = useParams();
@@ -28,28 +28,28 @@ export default function FileView() {
   const selectedSubcategories = searchParams.get("subs")?.split(",") || [];
   const startDate = searchParams.get("startDate") || "";
   const endDate = searchParams.get("endDate") || "";
-  const secInterval = parseInt(searchParams.get("secInterval") || "0", 10);
   const switchToChart = searchParams.get("view") || "table";
   const page = parseInt(searchParams.get("page") || "1", 10);
   const limit = 50;
 
+  // Update URL params
   const updateParams = (changes: Record<string, string | null>) => {
     const updated = new URLSearchParams(searchParams.toString());
-    Object.entries(changes).forEach(([k, v]) => {
-      if (!v) updated.delete(k);
-      else updated.set(k, v);
+    Object.entries(changes).forEach(([key, value]) => {
+      if (!value) updated.delete(key);
+      else updated.set(key, value);
     });
     setSearchParams(updated);
   };
 
-  // init gateway from URL
+  // Initialize gateway from route param
   useEffect(() => {
     if (gatewayId && !selectedGateway) {
       updateParams({ gateway: gatewayId });
     }
   }, [gatewayId, selectedGateway]);
 
-  // load gateways list
+  // Load gateways list
   useEffect(() => {
     axios
       .get<string[]>("http://localhost:3000/api/gateways")
@@ -57,42 +57,27 @@ export default function FileView() {
       .catch(console.error);
   }, []);
 
-  // fetch + sample readings
+  // Fetch readings whenever gateway, date/time, or page changes
   useEffect(() => {
     if (!selectedGateway) return;
 
-    const params: any = { gatewayId: selectedGateway, page, limit };
+    const params: any = {
+      gatewayId: selectedGateway,
+      page,
+      limit,
+    };
     if (startDate) params.startDate = new Date(startDate).toISOString();
-    if (endDate) params.endDate = new Date(endDate).toISOString();
+    if (endDate)   params.endDate   = new Date(endDate).toISOString();
 
     axios
       .get("http://localhost:3000/api/readingsdynamic", { params })
       .then((res) => {
         const data = res.data.data as Reading[];
         setAllData(data);
+        setFilteredData(data);
         setTotalCount(res.data.total as number);
 
-        if (secInterval > 0 && data.length) {
-          // descending-order sampling
-          const sampled: Reading[] = [];
-          let lastTs = new Date(data[0].timestamp).getTime();
-          sampled.push(data[0]);
-
-          data.slice(1).forEach((entry) => {
-            const t = new Date(entry.timestamp).getTime();
-            if (lastTs - t >= secInterval * 1000) {
-              sampled.push(entry);
-              lastTs = t;
-            }
-          });
-
-          setFilteredData(sampled);
-        } else {
-          setFilteredData(data);
-        }
-
-        // auto-select first category/subs
-        if (!selectedCategory && data.length) {
+        if (!selectedCategory && data.length > 0) {
           const firstCat = Object.keys(data[0].data)[0];
           updateParams({
             category: firstCat,
@@ -100,46 +85,41 @@ export default function FileView() {
           });
         }
       })
-      .catch(console.error);
-  }, [selectedGateway, startDate, endDate, secInterval, page]);
+      .catch((err) => console.error("Error fetching readings:", err));
+  }, [selectedGateway, startDate, endDate, page]);
 
-  const handleFilter = () => {
-    updateParams({
-      startDate,
-      endDate,
-      secInterval: secInterval ? String(secInterval) : null,
-      page: "1",
-    });
+  const handleDateFilter = () => {
+    updateParams({ startDate, endDate, page: "1" });
   };
 
   const handleGatewayChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const val = e.target.value;
-    updateParams({ gateway: val, page: "1", category: "", subs: "" });
-    navigate(`/fileview${val ? `?gateway=${val}` : ""}`);
+    const value = e.target.value;
+    updateParams({ gateway: value, page: "1", category: "", subs: "" });
+    navigate(`/fileview${value ? `?gateway=${value}` : ""}`);
   };
 
-  const toggleSub = (sub: string) => {
-    const upd = selectedSubcategories.includes(sub)
+  const toggleSubcategory = (sub: string) => {
+    const updated = selectedSubcategories.includes(sub)
       ? selectedSubcategories.filter((s) => s !== sub)
       : [...selectedSubcategories, sub];
-    updateParams({ subs: upd.join(",") });
+    updateParams({ subs: updated.join(",") });
   };
 
-  const getSubs = (): string[] => {
-    const s = new Set<string>();
-    filteredData.forEach((e) => {
-      const cat = e.data[selectedCategory!];
-      if (cat) Object.keys(cat).forEach((sub) => s.add(sub));
+  const getAllSubcategories = (): string[] => {
+    const subs = new Set<string>();
+    filteredData.forEach((entry) => {
+      const catData = entry.data[selectedCategory!];
+      if (catData) Object.keys(catData).forEach((s) => subs.add(s));
     });
-    return Array.from(s);
+    return Array.from(subs);
   };
 
   return (
     <div className="mx-3">
       <h1 className="text-2xl font-bold ml-5">File View</h1>
 
-      {/* Date-Time + Seconds Interval */}
-      <div className="flex items-center mx-10 justify-between my-4 mt-10 space-x-4">
+      {/* Date-Time Range Picker */}
+      <div className="flex items-center mx-10 justify-between my-4 mt-10">
         <span className="font-semibold">Select Range</span>
         <label className="flex items-center gap-2">
           From
@@ -159,22 +139,9 @@ export default function FileView() {
             className="p-1 border rounded"
           />
         </label>
-        <label className="flex items-center gap-2">
-          Seconds interval
-          <input
-            type="number"
-            min="1"
-            max="59"
-            value={secInterval || ""}
-            onChange={(e) =>
-              updateParams({ secInterval: e.target.value })
-            }
-            className="w-20 p-1 border rounded"
-          />
-        </label>
         <button
           className="bg-blue-600 text-white px-4 py-1 rounded"
-          onClick={handleFilter}
+          onClick={handleDateFilter}
         >
           Apply
         </button>
@@ -215,12 +182,12 @@ export default function FileView() {
           {selectedCategory && (
             <div className="mt-4">
               <h3 className="font-semibold mb-2">Subcategories</h3>
-              {getSubs().map((sub) => (
+              {getAllSubcategories().map((sub) => (
                 <label key={sub} className="flex items-center gap-2 mb-1">
                   <input
                     type="checkbox"
                     checked={selectedSubcategories.includes(sub)}
-                    onChange={() => toggleSub(sub)}
+                    onChange={() => toggleSubcategory(sub)}
                   />
                   {sub}
                 </label>
@@ -252,16 +219,12 @@ export default function FileView() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredData.map((entry, i) => {
+                  {filteredData.map((entry, idx) => {
                     const d = new Date(entry.timestamp);
                     return (
-                      <tr key={i} className="border-t">
-                        <td className="px-4 py-2">
-                          {d.toLocaleDateString()}
-                        </td>
-                        <td className="px-4 py-2">
-                          {d.toLocaleTimeString()}
-                        </td>
+                      <tr key={idx} className="border-t">
+                        <td className="px-4 py-2">{d.toLocaleDateString()}</td>
+                        <td className="px-4 py-2">{d.toLocaleTimeString()}</td>
                         {selectedSubcategories.map((sub) => (
                           <td key={sub} className="px-4 py-2">
                             {entry.data[selectedCategory!]?.[sub] ?? "-"}
@@ -274,9 +237,9 @@ export default function FileView() {
               </table>
               <div className="flex justify-end items-center gap-2 mt-4">
                 <button
-                  className="bg-gray-300 px-3 py-1 rounded disabled:opacity-50"
                   disabled={page === 1}
                   onClick={() => updateParams({ page: String(page - 1) })}
+                  className="bg-gray-300 px-3 py-1 rounded disabled:opacity-50"
                 >
                   Previous
                 </button>
@@ -284,9 +247,9 @@ export default function FileView() {
                   Page {page} of {Math.ceil(totalCount / limit)}
                 </span>
                 <button
-                  className="bg-gray-300 px-3 py-1 rounded disabled:opacity-50"
                   disabled={page * limit >= totalCount}
                   onClick={() => updateParams({ page: String(page + 1) })}
+                  className="bg-gray-300 px-3 py-1 rounded disabled:opacity-50"
                 >
                   Next
                 </button>
@@ -300,7 +263,7 @@ export default function FileView() {
                   Switch To Table
                 </button>
               </div>
-              {selectedCategory && selectedSubcategories.length ? (
+              {selectedCategory && selectedSubcategories.length > 0 ? (
                 <FileViewChart
                   data={filteredData}
                   category={selectedCategory}
@@ -308,15 +271,13 @@ export default function FileView() {
                 />
               ) : (
                 <p className="text-gray-600">
-                  No data to display. Select a category/subcategories.
+                  No data to display. Select a category and subcategories.
                 </p>
               )}
             </div>
           )
         ) : (
-          <div className="text-gray-500">
-            Please select a gateway to view data.
-          </div>
+          <div className="text-gray-500">Please select a gateway to view data.</div>
         )}
       </div>
     </div>
