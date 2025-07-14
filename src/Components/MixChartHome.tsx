@@ -1,82 +1,109 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ReactApexChart from "react-apexcharts";
+import axios from "axios";
 import type { ApexOptions } from "apexcharts";
 
-interface Series {
-  name: string;
-  type: "column" | "area" | "line";
-  data: number[];
-}
-
 const MixChartHome: React.FC = () => {
-  // state ko ApexOptions type do
-  const [options] = React.useState<ApexOptions>({
+  const [series, setSeries] = useState<any[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+
+ useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const [readingsRes, alarmsRes] = await Promise.all([
+        axios.get("http://localhost:3000/api/latest-readings"),
+        axios.get("http://localhost:3000/api/alarm-counts")
+      ]);
+
+      const readingsData = readingsRes.data || [];
+      const alarmData = alarmsRes.data || [];
+
+      const firstData = readingsData[0]?.data || {};
+      const categories = Object.keys(firstData);
+
+      const firstCategory = categories?.[0] || "Unknown Category";
+      const subKeys = firstData[firstCategory]
+        ? Object.keys(firstData[firstCategory])
+        : [];
+
+      const sub1 = subKeys?.[0] || "Metric";
+
+      const gatewayMap: Record<string, any> = {};
+
+      readingsData.forEach((item: any) => {
+        const gw = item.gatewayId;
+        if (!gatewayMap[gw]) gatewayMap[gw] = {};
+        gatewayMap[gw][sub1] = item.data?.[firstCategory]?.[sub1] ?? 0;
+      });
+
+      alarmData.forEach((item: any) => {
+        const gw = item.gatewayId;
+        if (!gatewayMap[gw]) gatewayMap[gw] = {};
+        gatewayMap[gw]["alarms"] = item.count ?? 0;
+      });
+
+      const gatewayNames: string[] = Object.keys(gatewayMap);
+      const readingSeries: number[] = [];
+      const alarmSeries: number[] = [];
+
+      gatewayNames.forEach((gw) => {
+        const obj = gatewayMap[gw];
+        readingSeries.push(obj[sub1] ?? 0);
+        alarmSeries.push(obj["alarms"] ?? 0);
+      });
+
+      setCategories(gatewayNames);
+      setSeries([
+        { name: sub1, data: readingSeries },
+        { name: "Alarm Count", data: alarmSeries }
+      ]);
+    } catch (error) {
+      console.error("❌ Error fetching graph data:", error);
+    }
+  };
+
+  fetchData();
+}, []);
+
+
+  const options: ApexOptions = {
     chart: {
-      height: 350,
-      type: "line",
-      stacked: false,
-      toolbar: {
-        show: false,
-      },
-    },
-    stroke: {
-      width: [0, 2, 5],
-      curve: "smooth",
+      type: "bar",
+      height: 430
     },
     plotOptions: {
       bar: {
-        columnWidth: "50%",
-      },
+        horizontal: false,
+        dataLabels: {
+          position: "top"
+        }
+      }
     },
-    fill: {
-      opacity: [0.85, 0.25, 1],
-      gradient: {
-        inverseColors: false,
-        shade: "light",
-        type: "vertical",
-        opacityFrom: 0.85,
-        opacityTo: 0.55,
-        stops: [0, 100, 100, 100],
-      },
+    dataLabels: {
+      enabled: true,
+      offsetX: -6,
+      style: {
+        fontSize: "12px",
+        colors: ["#fff"]
+      }
     },
-    labels: [
-      "01/01/2003","02/01/2003","03/01/2003","04/01/2003","05/01/2003",
-      "06/01/2003","07/01/2003","08/01/2003","09/01/2003","10/01/2003","11/01/2003",
-    ],
-    markers: { size: 0 },
-    xaxis: { type: "datetime" },
-    yaxis: { title: { text: "Points" } },
+    stroke: {
+      show: true,
+      width: 1,
+      colors: ["#fff"]
+    },
     tooltip: {
       shared: true,
-      intersect: false,
-      y: {
-        // formatter must return string only
-        formatter: (value: number | undefined): string => {
-          // agar value undefined ho to empty string
-          if (value == null) return "";
-          return `${value.toFixed(0)} points`;
-        },
-      },
+      intersect: false
     },
-  });
-
-  const series: Series[] = [
-    { name: "Gateway 1", type: "column", data: [23,11,22,27,13,22,37,21,44,22,30] },
-    { name: "Gateway 2", type: "area",   data: [44,55,41,67,22,43,21,41,56,27,43] },
-    { name: "Gateway 3", type: "line",   data: [30,25,36,30,45,35,64,52,59,36,39] },
-  ];
+    xaxis: {
+      categories: categories
+    }
+  };
 
   return (
     <div>
-      <div id="chart">
-        <ReactApexChart
-          options={options}
-          series={series}
-          type="line"
-          height={350}
-        />
-      </div>
-      <div id="html-dist"></div>
+      <ReactApexChart options={options} series={series} type="bar" height={430} />
     </div>
   );
 };

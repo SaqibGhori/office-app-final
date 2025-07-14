@@ -24,19 +24,21 @@ export function useSocket(
   const socket = useRef<Socket>(getSocket()).current;
 
 useEffect(() => {
-    if (!onReading || !gatewayId) return;   // only bind if gatewayId present
+  if (!onReading || !gatewayId) return;
 
-    const handler = (data: any) => {
-      if (data.gatewayId === gatewayId) {
-        onReading(data);
-      }
-    };
+  socket.emit("subscribe", gatewayId); // subscribe to relevant gateway only
 
-    socket.on('new-reading', handler);
-    return () => {
-      socket.off('new-reading', handler);
-    };
-  }, [onReading, socket, gatewayId]);
+  const handler = (data: any) => {
+    if (data.gatewayId === gatewayId) {
+      onReading(data);
+    }
+  };
+
+  socket.on('new-reading', handler);
+  return () => {
+    socket.off('new-reading', handler);
+  };
+}, [onReading, socket, gatewayId]);
 
 
   return socket;
