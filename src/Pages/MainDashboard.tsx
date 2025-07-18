@@ -48,12 +48,12 @@ export default function MainDashboard() {
         <h1 className="text-2xl font-bold ml-5">
           Gateway: {gatewayId || "Select a gateway"}
         </h1>
-        <div className="flex gap-2 p-4">
+        {/* <div className="flex gap-2 p-4">
           <Link to={`/harmonics?gateway=${gatewayId}`}>Harmonics</Link>
           <Link to={`/fileview?gateway=${gatewayId}`}>File View</Link>
           <Link to={`/alaram?gateway=${gatewayId}`}>Alaram</Link>
           <Link to={`/settings?gateway=${gatewayId}`}>Settings</Link>
-        </div>
+        </div> */}
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 p-4">

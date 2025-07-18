@@ -1,8 +1,8 @@
-// AlarmPage.tsx (Refactored to use DataContext)
 import { useEffect, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useSocket } from "../hooks/useSocket";
 import { useData } from "../context/DataContext";
+import axios from "axios";
 
 interface AlarmItem {
   _id?: string;
@@ -10,7 +10,7 @@ interface AlarmItem {
   category: string;
   subcategory: string;
   value: number;
-  priority: "High" | "Medium" | "Low";
+  priority: "High" | "Normal" | "Low";
 }
 
 export default function AlarmPage() {
@@ -21,34 +21,41 @@ export default function AlarmPage() {
   const [page, setPage] = useState(1);
   const perPage = 20;
   const [totalPages, setTotalPages] = useState(1);
-  const socket = useSocket(); // assuming it returns the socket object
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const socket = useSocket();
+  const navigate = useNavigate();
 
-  // 1) Load saved alarms from DB (paginated)
-  useEffect(() => {
+  const fetchAlarms = () => {
     if (!gatewayId) return;
     setLoading(true);
+    const params: any = {
+      gatewayId,
+      page,
+      limit: perPage,
+    };
+    if (startDate) params.startDate = new Date(startDate).toISOString();
+    if (endDate) params.endDate = new Date(endDate).toISOString();
 
-    fetch(`http://localhost:3000/api/alarm-records?gatewayId=${gatewayId}&page=${page}&limit=${perPage}`)
-      .then(res => res.json())
-      .then(data => {
-        setAlarms(data.data);
-        setTotalPages(data.totalPages);
+    axios
+      .get("http://localhost:3000/api/alarm-records", { params })
+      .then((res) => {
+        setAlarms(res.data.data);
+        setTotalPages(res.data.totalPages);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [gatewayId, page]);
+  };
 
-  // 2) Load alarm settings
   useEffect(() => {
-    if (gatewayId) fetchAlarmSettings();
+    fetchAlarmSettings();
   }, [gatewayId]);
 
-  // ✅ 3) Listen for new alarms
   useEffect(() => {
     if (!gatewayId || !socket) return;
 
     const handler = (newAlarms: AlarmItem[]) => {
-      setAlarms(prev => [...newAlarms, ...prev].slice(0, perPage));
+      setAlarms((prev) => [...newAlarms, ...prev].slice(0, perPage));
     };
 
     socket.on("new-alarms", handler);
@@ -57,10 +64,54 @@ export default function AlarmPage() {
     };
   }, [gatewayId, socket]);
 
+  useEffect(() => {
+    if (gatewayId) fetchAlarms();
+  }, [gatewayId, page]);
+
+  const handleApplyFilters = () => {
+    setPage(1);
+    fetchAlarms();
+  };
 
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Alarm Page for {gatewayId}</h1>
+      <div className="flex gap-4 mb-4 items-end">
+        <div>
+          <label className="block text-sm font-medium mb-1">Start Date</label>
+          <input
+            type="datetime-local"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="border px-3 py-1 rounded"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">End Date</label>
+          <input
+            type="datetime-local"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="border px-3 py-1 rounded"
+          />
+        </div>
+        <button
+          onClick={handleApplyFilters}
+          className="px-4 py-2 bg-blue-600 text-white rounded"
+        >
+          Apply
+        </button>
+        <button
+          onClick={() => {
+            const start = startDate ? new Date(startDate).toISOString() : "";
+            const end = endDate ? new Date(endDate).toISOString() : "";
+            navigate(`/alarm-download?gatewayId=${gatewayId}&startDate=${start}&endDate=${end}`);
+          }}
+          className="px-4 py-2 bg-green-600 text-white rounded"
+        >
+          Export Data
+        </button>
+      </div>
 
       {loading ? (
         <div className="animate-pulse space-y-2">
@@ -89,18 +140,16 @@ export default function AlarmPage() {
                     <td className="px-3 py-2">{new Date(a.timestamp).toLocaleString()}</td>
                     <td className="px-3 py-2">{a.category}</td>
                     <td className="px-3 py-2">{a.subcategory}</td>
-                    <td className={`px-3 py-2 font-mono ${
-                      a.priority === "High" ? "text-red-600" :
-                      a.priority === "Medium" ? "text-orange-500" :
-                      "text-green-600"
-                    }`}>
+                    <td className={`px-3 py-2 font-mono ${a.priority === "High" ? "text-red-600" :
+                      a.priority === "Normal" ? "text-green-600" :
+                        "text-blue-600"
+                      }`}>
                       {a.value}
                     </td>
-                    <td className={`px-3 py-2 font-semibold ${
-                      a.priority === "High" ? "text-red-600" :
-                      a.priority === "Medium" ? "text-orange-500" :
-                      "text-green-600"
-                    }`}>
+                    <td className={`px-3 py-2 font-semibold ${a.priority === "High" ? "text-red-600" :
+                      a.priority === "Normal" ? "text-green-600" :
+                        "text-blue-600"
+                      }`}>
                       {a.priority}
                     </td>
                   </tr>
