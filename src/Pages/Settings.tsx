@@ -42,8 +42,8 @@ export default function Settings() {
         setting.message =
           val === "High"
             ? "High level reached"
-            : val === "Medium"
-              ? "Medium level reached"
+            : val === "Normal"
+              ? "Normal level reached"
               : "Low level reached";
       } else {
         setting[field] = Number(val);
@@ -125,7 +125,7 @@ export default function Settings() {
                   }`}
               >
                 <option>High</option>
-                <option>Medium</option>
+                <option>Normal</option>
                 <option>Low</option>
               </select>
               <input

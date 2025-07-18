@@ -16,7 +16,7 @@ type AlarmSetting = {
     subcategory: string;
     high?: number;
     low?: number;
-    priority: "High" | "Medium" | "Low";
+    priority: "High" | "Normal" | "Low";
     message: string;
 };
 
@@ -132,8 +132,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                             subcategory: sub,
                             high: undefined,
                             low: undefined,
-                            priority: "Medium",
-                            message: "Medium level reached",
+                            priority: "Normal",
+                            message: "Normal level reached",
                         });
                     });
                 });

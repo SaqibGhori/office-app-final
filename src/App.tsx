@@ -10,6 +10,8 @@ import Alaram from './Pages/Alaram';
 import Settings from './Pages/Settings';
 import Home from './Pages/Home';
 import { DataProvider } from './context/DataContext';
+import AlarmDownloadPage from './Pages/AlarmDownloadPage';
+import FileViewDownloadPage from './Pages/FileViewDownloadPage';
 
 function App() {
   return (
@@ -21,8 +23,10 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/maindashboard" element={<MainDashboard />} />
             <Route path="/fileview" element={<FIleView />} />
+            <Route path="/fileview/export" element={<FileViewDownloadPage/>} />
             <Route path="/harmonics" element={<Harmonics />} />
             <Route path="/alaram" element={<Alaram />} />
+            <Route path="/alarm-download" element={<AlarmDownloadPage/>} />
             <Route path="/settings" element={<Settings />} />
 
 
