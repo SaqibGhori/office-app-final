@@ -23,7 +23,6 @@ export default function AlarmPage() {
   const [totalPages, setTotalPages] = useState(1);
   const socket = useSocket(); // assuming it returns the socket object
 
-  // 1) Load saved alarms from DB (paginated)
   useEffect(() => {
     if (!gatewayId) return;
     setLoading(true);
