@@ -4,7 +4,8 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import FileViewChart from "../Components/FileViewChart";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
+import { GatewayLabel } from "../Components/GatewayLabel"; 
+import { useGateway } from "../context/GatewayContext";  
   interface ReadingData {
     [category: string]: { [subcategory: string]: number };
   }
@@ -20,9 +21,9 @@ interface Reading {
   data: ReadingData;
 }
 
-// ... (imports and interfaces remain unchanged)
 
 export default function FileView() {
+  const { meta } = useGateway();  
   const [allData, setAllData] = useState<Reading[]>([]);
   const [filteredData, setFilteredData] = useState<Reading[]>([]);
   const [gatewayIds, setGatewayIds] = useState<string[]>([]);
@@ -171,7 +172,13 @@ export default function FileView() {
   return (
     <div className="mx-3">
       <ToastContainer />
-      <h1 className="text-2xl font-bold ml-5">File View</h1>
+<h1 className="text-2xl font-bold ml-5">
+   File View –{" "}
+   {selectedGateway
+     ? <GatewayLabel id={selectedGateway} showId={false}/>
+     : "Select a gateway"
+   }
+ </h1>
 
       {/* Date-Time + Seconds Interval */}
       <div className="flex items-center mx-10 justify-between my-4 mt-10 space-x-4">
@@ -226,11 +233,17 @@ export default function FileView() {
             <option value="" disabled>
               Select Gateway
             </option>
-            {gatewayIds.map((id) => (
+            {/* {gatewayIds.map((id) => (
               <option key={id} value={id}>
                 {id}
               </option>
-            ))}
+            ))} */}
+             {gatewayIds.map((id) => (
+   <option key={id} value={id}>
+     {meta[id] ?? id} ({id})
+   </option>
+ ))}
+
           </select>
 
           <h2 className="text-xl font-bold mb-4">Categories</h2>

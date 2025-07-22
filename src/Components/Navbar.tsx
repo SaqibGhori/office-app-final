@@ -49,11 +49,16 @@ const Navbar = () => {
             File View
           </Link>
           <Link to={`/settings${gatewayId ? `?gateway=${gatewayId}` : ""}`}>
-            Settings
+          Alarm Settings
           </Link>
           <Link to={`/alaram${gatewayId ? `?gateway=${gatewayId}` : ""}`}>
             Alarms
           </Link>
+          
+          <Link to={`/settingsPage${gatewayId ? `?gateway=${gatewayId}` : ""}`}>
+            Global Settings
+          </Link>
+
           {/* <li className="relative">
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}

@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useSocket } from "../hooks/useSocket";
 import { useData } from "../context/DataContext";
 import axios from "axios";
+import { GatewayLabel } from '../Components/GatewayLabel';    // ← add
+import { useGateway } from '../context/GatewayContext';       // ← add
 
 interface AlarmItem {
   _id?: string;
@@ -14,6 +16,7 @@ interface AlarmItem {
 }
 
 export default function AlarmPage() {
+ const { meta } = useGateway();  // ← alias map
   const { gatewayId, alarmSettings, fetchAlarmSettings } = useData();
   const { search } = useLocation();
   const [alarms, setAlarms] = useState<AlarmItem[]>([]);
@@ -75,7 +78,14 @@ export default function AlarmPage() {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Alarm Page for {gatewayId}</h1>
+<h1 className="text-2xl font-bold mb-4">
+ Alarm Page for{' '}
+ {gatewayId
+   ? <GatewayLabel id={gatewayId} showId={false}/>
+   : 'Select a gateway'
+ }
+</h1>
+
       <div className="flex gap-4 mb-4 items-end">
         <div>
           <label className="block text-sm font-medium mb-1">Start Date</label>

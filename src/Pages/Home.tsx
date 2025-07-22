@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import MixChartHome from '../Components/MixChartHome'
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { GatewayLabel } from '../Components/GatewayLabel';
 
 const Home = () => {
   const [gateways, setGateways] = useState<string[]>([]);
@@ -41,6 +42,7 @@ const Home = () => {
                   className="py-4 px-12 mx-auto   bg-slate-300 hover:bg-gray-300 my-2 block "
                 >
                   {gateway}
+                  <GatewayLabel id = {gateway} />
                 </button>
               // </li>
               // </div>
