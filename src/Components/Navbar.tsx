@@ -54,10 +54,6 @@ const Navbar = () => {
           <Link to={`/alaram${gatewayId ? `?gateway=${gatewayId}` : ""}`}>
             Alarms
           </Link>
-          
-          <Link to={`/settingsPage${gatewayId ? `?gateway=${gatewayId}` : ""}`}>
-            Global Settings
-          </Link>
 
           {/* <li className="relative">
             <button

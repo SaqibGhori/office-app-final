@@ -12,7 +12,6 @@ import Home from './Pages/Home';
 import { DataProvider } from './context/DataContext';
 import AlarmDownloadPage from './Pages/AlarmDownloadPage';
 import FileViewDownloadPage from './Pages/FileViewDownloadPage';
-import SettingsPage from './Pages/SettingsPage';
 
 function App() {
   return (
@@ -29,7 +28,6 @@ function App() {
             <Route path="/alaram" element={<Alaram />} />
             <Route path="/alarm-download" element={<AlarmDownloadPage/>} />
             <Route path="/settings" element={<Settings />} />
-            <Route path="/settingsPage" element={<SettingsPage />} />
 
 
             <Route path="/phase2" element={<Phase2 />} />

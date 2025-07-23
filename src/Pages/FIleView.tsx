@@ -4,45 +4,39 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import FileViewChart from "../Components/FileViewChart";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { GatewayLabel } from "../Components/GatewayLabel"; 
-import { useGateway } from "../context/GatewayContext";  
-  interface ReadingData {
-    [category: string]: { [subcategory: string]: number };
-  }
 
-  interface Reading {
-    gatewayId: string;
-    timestamp: string;
-    data: ReadingData;
-  }
+interface ReadingData {
+  [category: string]: { [subcategory: string]: number };
+}
+
 interface Reading {
   gatewayId: string;
   timestamp: string;
   data: ReadingData;
 }
 
+// ... (imports and interfaces remain unchanged)
 
 export default function FileView() {
-  const { meta } = useGateway();  
   const [allData, setAllData] = useState<Reading[]>([]);
   const [filteredData, setFilteredData] = useState<Reading[]>([]);
   const [gatewayIds, setGatewayIds] = useState<string[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false); // 👈 loading state
 
-    const { gatewayId } = useParams();
-    const [searchParams, setSearchParams] = useSearchParams();
-    const navigate = useNavigate();
+  const { gatewayId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
-    const selectedGateway = searchParams.get("gateway") || "";
-    const selectedCategory = searchParams.get("category");
-    const selectedSubcategories = searchParams.get("subs")?.split(",") || [];
-    const startDate = searchParams.get("startDate") || "";
-    const endDate = searchParams.get("endDate") || "";
-    const secInterval = parseInt(searchParams.get("secInterval") || "0", 10);
-    const switchToChart = searchParams.get("view") || "table";
-    const page = parseInt(searchParams.get("page") || "1", 10);
-    const limit = 50;
+  const selectedGateway = searchParams.get("gateway") || "";
+  const selectedCategory = searchParams.get("category");
+  const selectedSubcategories = searchParams.get("subs")?.split(",") || [];
+  const startDate = searchParams.get("startDate") || "";
+  const endDate = searchParams.get("endDate") || "";
+  const secInterval = parseInt(searchParams.get("secInterval") || "0", 10);
+  const switchToChart = searchParams.get("view") || "table";
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const limit = 50;
 
   const [localStartDate, setLocalStartDate] = useState(startDate);
   const [localEndDate, setLocalEndDate] = useState(endDate);
@@ -92,9 +86,19 @@ export default function FileView() {
 
         if (!selectedCategory && data.length) {
           const firstCat = Object.keys(data[0].data)[0];
+
+          // collect all unique subs across all records for firstCat
+          const uniqueSubs = new Set<string>();
+          data.forEach((item) => {
+            const subs = item.data[firstCat];
+            if (subs) {
+              Object.keys(subs).forEach((key) => uniqueSubs.add(key));
+            }
+          });
+
           updateParams({
             category: firstCat,
-            subs: Object.keys(data[0].data[firstCat]).join(","),
+            subs: Array.from(uniqueSubs).join(","),
           });
         }
       })
@@ -153,32 +157,46 @@ export default function FileView() {
     navigate(`/fileview${val ? `?gateway=${val}` : ""}`);
   };
 
-    const toggleSub = (sub: string) => {
-      const upd = selectedSubcategories.includes(sub)
-        ? selectedSubcategories.filter((s) => s !== sub)
-        : [...selectedSubcategories, sub];
-      updateParams({ subs: upd.join(",") });
-    };
+  const toggleSub = (sub: string) => {
+    const upd = selectedSubcategories.includes(sub)
+      ? selectedSubcategories.filter((s) => s !== sub)
+      : [...selectedSubcategories, sub];
+    updateParams({ subs: upd.join(",") });
+  };
 
-    const getSubs = (): string[] => {
-      const s = new Set<string>();
-      filteredData.forEach((e) => {
-        const cat = e.data[selectedCategory!];
-        if (cat) Object.keys(cat).forEach((sub) => s.add(sub));
-      });
-      return Array.from(s);
-    };
+  const getSubs = (): string[] => {
+    const s = new Set<string>();
+    filteredData.forEach((e) => {
+      const cat = e.data[selectedCategory!];
+      if (cat) Object.keys(cat).forEach((sub) => s.add(sub));
+    });
+    return Array.from(s);
+  };
+
+  const getCategories = (): string[] => {
+    const categories = new Set<string>();
+    filteredData.forEach((entry) => {
+      Object.keys(entry.data).forEach((cat) => categories.add(cat));
+    });
+    return Array.from(categories);
+  };
+
+  const getSubcategoriesByCategory = (cat: string): string[] => {
+  const subSet = new Set<string>();
+  filteredData.forEach((entry) => {
+    const subData = entry.data[cat];
+    if (subData) {
+      Object.keys(subData).forEach((sub) => subSet.add(sub));
+    }
+  });
+  return Array.from(subSet);
+};
+
 
   return (
     <div className="mx-3">
       <ToastContainer />
-<h1 className="text-2xl font-bold ml-5">
-   File View –{" "}
-   {selectedGateway
-     ? <GatewayLabel id={selectedGateway} showId={false}/>
-     : "Select a gateway"
-   }
- </h1>
+      <h1 className="text-2xl font-bold ml-5">File View</h1>
 
       {/* Date-Time + Seconds Interval */}
       <div className="flex items-center mx-10 justify-between my-4 mt-10 space-x-4">
@@ -233,48 +251,45 @@ export default function FileView() {
             <option value="" disabled>
               Select Gateway
             </option>
-            {/* {gatewayIds.map((id) => (
+            {gatewayIds.map((id) => (
               <option key={id} value={id}>
                 {id}
               </option>
-            ))} */}
-             {gatewayIds.map((id) => (
-   <option key={id} value={id}>
-     {meta[id] ?? id} ({id})
-   </option>
- ))}
-
+            ))}
           </select>
 
           <h2 className="text-xl font-bold mb-4">Categories</h2>
-          {filteredData[0]?.data &&
-            Object.keys(filteredData[0].data).map((cat) => (
-              <button
-                key={cat}
-                onClick={() => updateParams({ category: cat, subs: "" })}
-                className={`block w-full text-left px-2 py-1 mb-1 rounded ${selectedCategory === cat ? "bg-gray-700" : "hover:bg-gray-700"
-                  }`}
-              >
-                {cat}
-              </button>
-            ))}
+          {getCategories().map((cat) => (
+            <button
+              key={cat}
+              onClick={() => {
+                const subs = getSubcategoriesByCategory(cat);
+                updateParams({ category: cat, subs: subs.join(",") });
+              }}
+              className={`block w-full text-left px-2 py-1 mb-1 rounded ${selectedCategory === cat ? "bg-gray-700" : "hover:bg-gray-700"
+                }`}
+            >
+              {cat}
+            </button>
+          ))}
 
-            {selectedCategory && (
-              <div className="mt-4">
-                <h3 className="font-semibold mb-2">Subcategories</h3>
-                {getSubs().map((sub) => (
-                  <label key={sub} className="flex items-center gap-2 mb-1">
-                    <input
-                      type="checkbox"
-                      checked={selectedSubcategories.includes(sub)}
-                      onChange={() => toggleSub(sub)}
-                    />
-                    {sub}
-                  </label>
-                ))}
-              </div>
-            )}
-          </div>
+
+          {selectedCategory && (
+            <div className="mt-4">
+              <h3 className="font-semibold mb-2">Subcategories</h3>
+              {getSubs().map((sub) => (
+                <label key={sub} className="flex items-center gap-2 mb-1">
+                  <input
+                    type="checkbox"
+                    checked={selectedSubcategories.includes(sub)}
+                    onChange={() => toggleSub(sub)}
+                  />
+                  {sub}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Main Content */}
         <div className="flex-1 mx-3">
