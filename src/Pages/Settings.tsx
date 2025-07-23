@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useData } from "../context/DataContext";
+import { GatewayLabel } from '../Components/GatewayLabel'
 
 export default function Settings() {
   const {
@@ -63,9 +64,12 @@ export default function Settings() {
 
   return (
     <div className="p-4 w-full mx-auto">
-      <h1 className="text-2xl font-bold mb-4">
-        Alarm Settings for {gatewayId}
-      </h1>
+     <h1 className="text-2xl font-bold ml-5">
+   Alarm Settings for{' '}
+   {gatewayId
+     ? <GatewayLabel id={gatewayId} />
+     : 'Select a gateway'}
+ </h1>
 
       {localSettings.length > 0 ? (
         <button

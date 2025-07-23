@@ -3,7 +3,7 @@ import { useGateway } from '../context/GatewayContext';
 
 interface Props {
   id: string;
-  showId?: boolean;      // agar true, toh (id) bhi dikhega
+  showId?: boolean;      
   idStyle?: React.CSSProperties;
   nameStyle?: React.CSSProperties;
 }

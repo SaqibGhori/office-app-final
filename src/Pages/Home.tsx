@@ -41,8 +41,8 @@ const Home = () => {
                   onClick={() => handleSelectGateway(gateway)}
                   className="py-4 px-12 mx-auto   bg-slate-300 hover:bg-gray-300 my-2 block "
                 >
-                  {gateway}
-                  <GatewayLabel id = {gateway} />
+                  {/* {gateway} */}
+                  <GatewayLabel id = {gateway}  />
                 </button>
               // </li>
               // </div>
