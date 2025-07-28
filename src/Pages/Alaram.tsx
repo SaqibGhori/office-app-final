@@ -3,8 +3,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useSocket } from "../hooks/useSocket";
 import { useData } from "../context/DataContext";
 import axios from "axios";
-import { GatewayLabel } from '../Components/GatewayLabel';    // ← add
-import { useGateway } from '../context/GatewayContext';       // ← add
 
 interface AlarmItem {
   _id?: string;
@@ -16,7 +14,6 @@ interface AlarmItem {
 }
 
 export default function AlarmPage() {
- const { meta } = useGateway();  // ← alias map
   const { gatewayId, alarmSettings, fetchAlarmSettings } = useData();
   const { search } = useLocation();
   const [alarms, setAlarms] = useState<AlarmItem[]>([]);
@@ -28,15 +25,19 @@ export default function AlarmPage() {
   const [endDate, setEndDate] = useState("");
   const socket = useSocket();
   const navigate = useNavigate();
+  const [isFilterActive, setIsFilterActive] = useState(false);
 
+  // 🚀 Fetch Alarms Function
   const fetchAlarms = () => {
     if (!gatewayId) return;
     setLoading(true);
+
     const params: any = {
       gatewayId,
       page,
       limit: perPage,
     };
+
     if (startDate) params.startDate = new Date(startDate).toISOString();
     if (endDate) params.endDate = new Date(endDate).toISOString();
 
@@ -50,42 +51,61 @@ export default function AlarmPage() {
       .finally(() => setLoading(false));
   };
 
+  // 🔁 Load alarm settings once on gateway change
   useEffect(() => {
-    fetchAlarmSettings();
+    if (gatewayId) fetchAlarmSettings();
   }, [gatewayId]);
 
-  useEffect(() => {
-    if (!gatewayId || !socket) return;
-
-    const handler = (newAlarms: AlarmItem[]) => {
+  // 🔁 Listen to real-time socket alarms (only if no filters applied)
+ useEffect(() => {
+  const handler = (newAlarms: AlarmItem[]) => {
+    if (!isFilterActive) {
       setAlarms((prev) => [...newAlarms, ...prev].slice(0, perPage));
-    };
+    }
+  };
 
+  if (gatewayId && socket) {
     socket.on("new-alarms", handler);
+
+    // Return cleanup function
     return () => {
       socket.off("new-alarms", handler);
     };
-  }, [gatewayId, socket]);
+  }
 
+  // 🚫 Explicitly return void when no handler is set
+  return undefined;
+
+}, [gatewayId, socket, isFilterActive]);
+
+
+
+  // 🔁 Refetch alarms when gatewayId or page changes
   useEffect(() => {
     if (gatewayId) fetchAlarms();
   }, [gatewayId, page]);
 
+  // 🎯 Apply filter handler
   const handleApplyFilters = () => {
+    setIsFilterActive(true); // 👈 disable socket push
+    setPage(1);
+    fetchAlarms();
+  };
+
+  // 🔁 Clear filter and return to default paginated+socket
+  const handleClearFilter = () => {
+    setStartDate("");
+    setEndDate("");
+    setIsFilterActive(false);
     setPage(1);
     fetchAlarms();
   };
 
   return (
     <div className="p-4">
-<h1 className="text-2xl font-bold mb-4">
- Alarm Page for{' '}
- {gatewayId
-   ? <GatewayLabel id={gatewayId} showId={false}/>
-   : 'Select a gateway'
- }
-</h1>
+      <h1 className="text-2xl font-bold mb-4">Alarm Page for {gatewayId}</h1>
 
+      {/* Filters Section */}
       <div className="flex gap-4 mb-4 items-end">
         <div>
           <label className="block text-sm font-medium mb-1">Start Date</label>
@@ -105,17 +125,28 @@ export default function AlarmPage() {
             className="border px-3 py-1 rounded"
           />
         </div>
+
         <button
           onClick={handleApplyFilters}
           className="px-4 py-2 bg-blue-600 text-white rounded"
         >
           Apply
         </button>
+
+        <button
+          onClick={handleClearFilter}
+          className="px-4 py-2 bg-gray-500 text-white rounded"
+        >
+          Clear Filter
+        </button>
+
         <button
           onClick={() => {
             const start = startDate ? new Date(startDate).toISOString() : "";
             const end = endDate ? new Date(endDate).toISOString() : "";
-            navigate(`/alarm-download?gatewayId=${gatewayId}&startDate=${start}&endDate=${end}`);
+            navigate(
+              `/alarm-download?gatewayId=${gatewayId}&startDate=${start}&endDate=${end}`
+            );
           }}
           className="px-4 py-2 bg-green-600 text-white rounded"
         >
@@ -123,6 +154,7 @@ export default function AlarmPage() {
         </button>
       </div>
 
+      {/* Loader */}
       {loading ? (
         <div className="animate-pulse space-y-2">
           {[...Array(perPage)].map((_, i) => (
@@ -133,6 +165,7 @@ export default function AlarmPage() {
         <p>No alarms detected.</p>
       ) : (
         <>
+          {/* Table */}
           <div className="overflow-x-auto border rounded">
             <table className="min-w-full table-fixed">
               <thead className="bg-gray-200 sticky top-0">
@@ -150,16 +183,26 @@ export default function AlarmPage() {
                     <td className="px-3 py-2">{new Date(a.timestamp).toLocaleString()}</td>
                     <td className="px-3 py-2">{a.category}</td>
                     <td className="px-3 py-2">{a.subcategory}</td>
-                    <td className={`px-3 py-2 font-mono ${a.priority === "High" ? "text-red-600" :
-                      a.priority === "Normal" ? "text-green-600" :
-                        "text-blue-600"
-                      }`}>
+                    <td
+                      className={`px-3 py-2 font-mono ${
+                        a.priority === "High"
+                          ? "text-red-600"
+                          : a.priority === "Normal"
+                          ? "text-green-600"
+                          : "text-blue-600"
+                      }`}
+                    >
                       {a.value}
                     </td>
-                    <td className={`px-3 py-2 font-semibold ${a.priority === "High" ? "text-red-600" :
-                      a.priority === "Normal" ? "text-green-600" :
-                        "text-blue-600"
-                      }`}>
+                    <td
+                      className={`px-3 py-2 font-semibold ${
+                        a.priority === "High"
+                          ? "text-red-600"
+                          : a.priority === "Normal"
+                          ? "text-green-600"
+                          : "text-blue-600"
+                      }`}
+                    >
                       {a.priority}
                     </td>
                   </tr>
@@ -168,17 +211,20 @@ export default function AlarmPage() {
             </table>
           </div>
 
+          {/* Pagination */}
           <div className="flex justify-between items-center mt-4">
             <button
-              onClick={() => setPage(p => Math.max(1, p - 1))}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
               className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
             >
               Previous
             </button>
-            <span>Page {page} of {totalPages}</span>
+            <span>
+              Page {page} of {totalPages}
+            </span>
             <button
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
               className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
             >

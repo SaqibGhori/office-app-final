@@ -29,19 +29,19 @@ export default function AlarmDownloadPage() {
   const gatewayId = params.get("gatewayId");
   const startDate = params.get("startDate") || "";
   const endDate = params.get("endDate") || "";
-  const interval = params.get("interval") || "0";
+  // const interval = params.get("interval") || "0";
 
   useEffect(() => {
     if (!gatewayId) return;
 
     axios
       .get("http://localhost:3000/api/alarm-records/export", {
-        params: { gatewayId, startDate, endDate, interval },
+        params: { gatewayId, startDate, endDate },
       })
       .then((res) => setData(res.data.data))
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [gatewayId, startDate, endDate, interval]);
+  }, [gatewayId, startDate, endDate]);
 
   const handleDownload = async () => {
     setDownloading(true);

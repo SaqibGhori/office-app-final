@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import { useData } from "../context/DataContext";
 import RealTimeCharts from "../Components/RealTImeCharts";
 import { Link } from "react-router-dom";
-import { GatewayLabel } from '../Components/GatewayLabel';
 
 type Section = {
   title: string;
@@ -48,11 +47,8 @@ export default function MainDashboard() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold ml-5">
           {/* Gateway: {gatewayId || "Select a gateway"} */}
-Gateway:{" "}
-{gatewayId
-? <GatewayLabel id={gatewayId} showId={false} />
-: "Select a gateway"
-}
+         Gateway:{gatewayId}
+
 
         </h1>
         {/* <div className="flex gap-2 p-4">

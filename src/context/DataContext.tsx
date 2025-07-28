@@ -109,7 +109,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // 📄 Alarm settings fetcher
     const fetchAlarmSettings = async () => {
         try {
-            const res = await axios.get<AlarmSetting[]>("http://localhost:3000/api/alarm-settings", {
+            const res = await axios.get<AlarmSetting[]>("http://localhost:3000/api/settings", {
                 params: { gatewayId },
             });
 
