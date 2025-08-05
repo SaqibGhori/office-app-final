@@ -3,26 +3,26 @@ import axios from 'axios';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 
 const Navbar = () => {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  // const [dropdownOpen, setDropdownOpen] = useState(false);
   const [gateways, setGateways] = useState<string[]>([]);
   // const navigate = useNavigate();
-  const location = useLocation();
+  // const location = useLocation();
   const { search } = useLocation();
   const gatewayId = new URLSearchParams(search).get("gateway");
 
   // Fetch gateways from API
-  useEffect(() => {
-    const fetchGateways = async () => {
-      try {
-        const res = await axios.get<string[]>("http://localhost:3000/api/gateways");
-        setGateways(res.data);
-      } catch (error) {
-        console.error("Failed to fetch gateways:", error);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchGateways = async () => {
+  //     try {
+  //       const res = await axios.get<string[]>("http://localhost:3000/api/gateways");
+  //       setGateways(res.data);
+  //     } catch (error) {
+  //       console.error("Failed to fetch gateways:", error);
+  //     }
+  //   };
 
-    fetchGateways();
-  }, []);
+  //   fetchGateways();
+  // }, []);
 
   // const handleSelectGateway = (gateway: string) => {
   //   setDropdownOpen(false);
@@ -33,10 +33,6 @@ const Navbar = () => {
   return (
     <nav className="bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
       <div className="max-w-screen-xl mx-auto p-4 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <img src="https://flowbite.com/docs/images/logo.svg" className="h-8" alt="Logo" />
-          <span className="text-2xl font-semibold dark:text-white">Flowbite</span>
-        </div>
 
         <ul className="flex items-center space-x-6 text-gray-900 dark:text-white font-medium">
           <li>

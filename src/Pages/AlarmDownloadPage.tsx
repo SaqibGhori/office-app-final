@@ -37,6 +37,9 @@ export default function AlarmDownloadPage() {
     axios
       .get("http://localhost:3000/api/alarm-records/export", {
         params: { gatewayId, startDate, endDate },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
       })
       .then((res) => setData(res.data.data))
       .catch(console.error)

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import Chart from "react-apexcharts";
 import { useSocket } from "../hooks/useSocket";
-import { useLocation } from "react-router-dom";
 
 type RealTimeChartProps = {
   selectedTitle: string | null;
+  gatewayId: string | undefined;
 };
 
 type Reading = {
@@ -17,61 +17,63 @@ type Reading = {
   };
 };
 
-const RealTimeCharts: React.FC<RealTimeChartProps> = ({ selectedTitle }) => {
-  const [reading, setReading] = useState<Reading | null>(null);
-  const [series, setSeries] = useState<any[]>([]);
+const RealTimeCharts: React.FC<RealTimeChartProps> = ({ selectedTitle, gatewayId }) => {
+  const [seriesMap, setSeriesMap] = useState<Record<string, number[]>>({});
   const [timestamps, setTimestamps] = useState<string[]>([]);
+console.log(gatewayId , "testing")
+  // Reset series when selectedTitle changes
+  useEffect(() => {
+    setSeriesMap({});
+    setTimestamps([]);
+  }, [selectedTitle]);
 
-  // Get gateway from query string
-  const location = useLocation();
-  const query = new URLSearchParams(location.search);
- const gatewayId = query.get("gateway") || undefined;  // <— here
-
-  // Socket hook
   useSocket((data: Reading) => {
-    setReading(data);
+    if (data && selectedTitle && data.data[selectedTitle]) {
+      const categoryData = data.data[selectedTitle];
+      const currentTime = new Date().toLocaleTimeString();
+
+      setTimestamps((prev) => [...prev, currentTime].slice(-15));
+
+      setSeriesMap((prevMap) => {
+        const updatedMap = { ...prevMap };
+        Object.entries(categoryData).forEach(([label, value]) => {
+          const prevData = updatedMap[label] || [];
+          updatedMap[label] = [...prevData, value].slice(-15);
+        });
+        return updatedMap;
+      });
+    }
   }, gatewayId);
 
-  // Chart update
-  useEffect(() => {
-    if (!reading || !selectedTitle) return;
+  const series = Object.entries(seriesMap).map(([label, data]) => ({
+    name: label,
+    data,
+  }));
 
-    const categoryData = reading.data?.[selectedTitle];
-    if (!categoryData) return;
-
-    const currentTime = new Date().toLocaleTimeString();
-    setTimestamps((prev) => [...prev, currentTime].slice(-15));
-
-    setSeries((prevSeries) => {
-      return Object.entries(categoryData).map(([label, value]) => {
-        const existing = prevSeries.find((s) => s.name === label);
-        const updatedData = existing ? [...existing.data, value] : [value];
-
-        return {
-          name: label,
-          data: updatedData.slice(-15),
-        };
-      });
-    });
-  }, [reading, selectedTitle]);
-
-  // Apex chart options
   const options: ApexCharts.ApexOptions = {
     chart: {
       type: "line",
       height: 350,
-      toolbar: {
-        show: false,
+      animations: {
+        enabled: true,
+        dynamicAnimation: { speed: 500 }
       },
+      toolbar: { show: false },
+      zoom: { enabled: false },
     },
     xaxis: {
       categories: timestamps,
     },
     stroke: {
       curve: "smooth",
+      width: 2,
+    },
+    legend: {
+      position: 'top',
     },
     title: {
       text: selectedTitle || "Real-Time Chart",
+      align: 'left',
     },
   };
 

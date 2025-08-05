@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSocket } from "../hooks/useSocket";
 import { useData } from "../context/DataContext";
@@ -41,15 +41,21 @@ export default function AlarmPage() {
     if (startDate) params.startDate = new Date(startDate).toISOString();
     if (endDate) params.endDate = new Date(endDate).toISOString();
 
-    axios
-      .get("http://localhost:3000/api/alarm-records", { params })
-      .then((res) => {
-        setAlarms(res.data.data);
-        setTotalPages(res.data.totalPages);
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  };
+   axios
+  .get("http://localhost:3000/api/alarm-records", {
+    params,
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  })
+  .then((res) => {
+    setAlarms(res.data.data);
+    setTotalPages(res.data.totalPages || 1); // fallback in case undefined
+  })
+  .catch(console.error)
+  .finally(() => setLoading(false));
+  }
+
 
   // 🔁 Load alarm settings once on gateway change
   useEffect(() => {
@@ -57,26 +63,25 @@ export default function AlarmPage() {
   }, [gatewayId]);
 
   // 🔁 Listen to real-time socket alarms (only if no filters applied)
- useEffect(() => {
-  const handler = (newAlarms: AlarmItem[]) => {
-    if (!isFilterActive) {
-      setAlarms((prev) => [...newAlarms, ...prev].slice(0, perPage));
-    }
-  };
+ const handler = useCallback((newAlarms: AlarmItem[]) => {
+  if (!isFilterActive) {
+    setAlarms((prev) => {
+      const merged = [...newAlarms, ...prev];
+      merged.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      return merged.slice(0, perPage);
+    });
+  }
+}, [isFilterActive, perPage]);
 
+useEffect(() => {
   if (gatewayId && socket) {
     socket.on("new-alarms", handler);
 
-    // Return cleanup function
     return () => {
       socket.off("new-alarms", handler);
     };
   }
-
-  // 🚫 Explicitly return void when no handler is set
-  return undefined;
-
-}, [gatewayId, socket, isFilterActive]);
+}, [gatewayId, socket, handler]);
 
 
 

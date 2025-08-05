@@ -42,8 +42,11 @@ export default function FileExportPage() {
         if (interval) params.interval = interval;
 
         const res = await axios.get("http://localhost:3000/api/readingsdynamic", {
-          params,
-        });
+      params,
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token") || ""}`, // ✅ fallback
+      },
+    })
         setData(res.data.data);
       } catch (err) {
         console.error(err);
