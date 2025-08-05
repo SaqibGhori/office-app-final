@@ -38,6 +38,7 @@ const Home = () => {
         setLoading(false);
       }
     };
+    console.log(loading)
 
     fetchAlarms();
   }, [page]);
