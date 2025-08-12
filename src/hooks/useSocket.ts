@@ -14,32 +14,41 @@ export function getSocket(): Socket {
 }
 
 /**
+ * Custom React Hook to manage socket
  * @param onReading  Callback jab naya reading aaye
  * @param gatewayId  Aapka IoT device / gateway ID
+ * @param token      JWT Token for authentication & global-alarms
  */
 export function useSocket(
   onReading?: (data: any) => void,
-  gatewayId?: string
+  gatewayId?: string,
+  token?: string
 ): Socket {
   const socket = useRef<Socket>(getSocket()).current;
 
-useEffect(() => {
-  if (!onReading || !gatewayId) return;
+  useEffect(() => {
+    // console.log("🧠 useSocket subscribing:", { gatewayId, token });
 
-  socket.emit("subscribe", gatewayId); // subscribe to relevant gateway only
-
-  const handler = (data: any) => {
-    if (data.gatewayId === gatewayId) {
-      onReading(data);
+    if (!token) {
+      // console.warn("⚠️ useSocket: token missing. Will wait...");
+      return;
     }
-  };
 
-  socket.on('new-reading', handler);
-  return () => {
-    socket.off('new-reading', handler);
-  };
-}, [onReading, socket, gatewayId]);
+    // Subscribe with token for user-based room and gatewayId if provided
+    socket.emit("subscribe", { gatewayId, token });
 
+    const readingHandler = (data: any) => {
+      if (onReading && gatewayId && data.gatewayId === gatewayId) {
+        onReading(data);
+      }
+    };
+
+    socket.on("new-reading", readingHandler);
+
+    return () => {
+      socket.off("new-reading", readingHandler);
+    };
+  }, [onReading, gatewayId, token]);  // Dependencies are OK
 
   return socket;
 }

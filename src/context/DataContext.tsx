@@ -3,183 +3,214 @@ import { useLocation } from "react-router-dom";
 import { useSocket } from "../hooks/useSocket";
 import axios from "axios";
 
+// Types
 type Reading = {
-    gatewayId: string;
-    timestamp: string;
-    data: Record<string, Record<string, number>>;
+  gatewayId: string;
+  timestamp: string;
+  data: Record<string, Record<string, number>>;
 };
 
 type AlarmSetting = {
-    _id?: string;
-    gatewayId: string;
-    category: string;
-    subcategory: string;
-    high?: number;
-    low?: number;
-    priority: "High" | "Normal" | "Low";
-    message: string;
+  _id?: string;
+  gatewayId: string;
+  category: string;
+  subcategory: string;
+  high?: number;
+  low?: number;
+  priority: "High" | "Normal" | "Low";
+  message: string;
+};
+
+type Gateway = {
+  gatewayId: string;
+  name: string;
+  location: string;
 };
 
 interface DataContextType {
-    gatewayId: string;
-    gatewayIds: string[];
-    reading: Reading | null;
-    fetchGatewayIds: () => Promise<void>;
-    historicalData: Reading[];
-    totalCount: number;
-    fetchHistorical: (opts: {
-        startDate?: string;
-        endDate?: string;
-        page?: number;
-        limit?: number;
-    }) => void;
-
-    alarmSettings: AlarmSetting[];
-    fetchAlarmSettings: () => void;
-    saveAlarmSettings: (settings: AlarmSetting[]) => Promise<void>;
+  gatewayId: string;
+  gatewayIds: string[];       // old style
+  gateways: Gateway[];        // full list with name/location
+  reading: Reading | null;
+  fetchGatewayIds: () => Promise<void>;
+  historicalData: Reading[];
+  totalCount: number;
+  fetchHistorical: (opts: {
+    startDate?: string;
+    endDate?: string;
+    page?: number;
+    limit?: number;
+  }) => void;
+  alarmSettings: AlarmSetting[];
+  fetchAlarmSettings: () => void;
+  saveAlarmSettings: (settings: AlarmSetting[]) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | null>(null);
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { search } = useLocation();
-    const gatewayId = new URLSearchParams(search).get("gateway") || "";
+  const { search } = useLocation();
+  const gatewayId = new URLSearchParams(search).get("gateway") || "";
 
-    const [gatewayIds, setGatewayIds] = useState<string[]>([]);
-    const [reading, setReading] = useState<Reading | null>(null);
+  const [gateways, setGateways] = useState<Gateway[]>([]);
+  const [reading, setReading] = useState<Reading | null>(null);
+  const [historicalData, setHistoricalData] = useState<Reading[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [alarmSettings, setAlarmSettings] = useState<AlarmSetting[]>([]);
 
-    const [historicalData, setHistoricalData] = useState<Reading[]>([]);
-    const [totalCount, setTotalCount] = useState(0);
+ // Get userId from wherever you're storing it (e.g. localStorage)
+const userId = localStorage.getItem("userId") ?? undefined;
 
-    const [alarmSettings, setAlarmSettings] = useState<AlarmSetting[]>([]);
+// Real-time reading via socket (for live updates)
+useSocket((data: Reading) => {
+  if (data.gatewayId === gatewayId) {
+    setReading(data);
+    console.log("📡 New real-time reading received:", data);
+  }
+}, gatewayId, userId); // <-- ✅ now passing userId as 3rd param
 
 
-    // 🌐 Socket subscription for real-time data
-    useSocket((data: Reading) => {
-        if (data.gatewayId === gatewayId) {
-            setReading(data);
+  // ✅ Fetch user-specific gateways with token
+  const fetchGatewayIds = async () => {
+    try {
+      const res = await axios.get<Gateway[]>("http://localhost:3000/api/gateways", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      setGateways(res.data);
+    } catch (err) {
+      console.error("Failed to fetch gateways:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchGatewayIds();
+  }, []);
+
+  // 🔄 Fetch historical readings (with optional date filters)
+  const fetchHistorical = async ({
+    startDate,
+    endDate,
+    page = 1,
+    limit = 50,
+  }: {
+    startDate?: string;
+    endDate?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    if (!gatewayId) return;
+    try {
+      const params: any = { gatewayId, page, limit };
+      if (startDate) params.startDate = startDate;
+      if (endDate) params.endDate = endDate;
+
+      const res = await axios.get("http://localhost:3000/api/readingsdynamic", {
+        params,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      setHistoricalData(res.data.data || []);
+      setTotalCount(res.data.total || 0);
+    } catch (err) {
+      console.error("Failed to fetch historical data:", err);
+    }
+  };
+
+  // ⚙️ Alarm settings
+  const fetchAlarmSettings = async () => {
+    try {
+      const res = await axios.get<AlarmSetting[]>(
+        "http://localhost:3000/api/alarm-settings",
+        {
+          params: { gatewayId },
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         }
-    }, gatewayId);
+      );
 
-    // 🌐 Gateway list
-    const fetchGatewayIds = async () => {
-        try {
-            const res = await axios.get<string[]>("http://localhost:3000/api/gateways");
-            setGatewayIds(res.data);
-        } catch (err) {
-            console.error("Failed to fetch gateways:", err);
-        }
-    };
+      if (res.data.length > 0) {
+        setAlarmSettings(res.data);
+      } else {
+        // fallback if not found: auto-generate from data structure
+        const r2 = await axios.get<{ data: Reading[] }>(
+          "http://localhost:3000/api/readingsdynamic",
+          {
+            params: { gatewayId, limit: 1, page: 1 },
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
 
-    // 🔄 Load gateway list on mount
-    useEffect(() => {
-        fetchGatewayIds();
-    }, []);
+        const rd = r2.data.data[0]?.data || {};
+        const defs: AlarmSetting[] = [];
 
-    // 📄 Fetch historical readings (paginated)
-    const fetchHistorical = async ({
-        startDate,
-        endDate,
-        page = 1,
-        limit = 50
-    }: {
-        startDate?: string;
-        endDate?: string;
-        page?: number;
-        limit?: number;
-    }) => {
-        if (!gatewayId) return;
-        try {
-            const params: any = {
-                gatewayId,
-                page,
-                limit,
-            };
-            if (startDate) params.startDate = startDate;
-            if (endDate) params.endDate = endDate;
-
-            const res = await axios.get("http://localhost:3000/api/readingsdynamic", { params });
-            setHistoricalData(res.data.data || []);
-            setTotalCount(res.data.total || 0);
-        } catch (err) {
-            console.error("Failed to fetch historical data:", err);
-        }
-    };
-
-    // 📄 Alarm settings fetcher
-    const fetchAlarmSettings = async () => {
-        try {
-            const res = await axios.get<AlarmSetting[]>("http://localhost:3000/api/settings", {
-                params: { gatewayId },
+        Object.entries(rd).forEach(([cat, subObj]) => {
+          Object.keys(subObj as Record<string, number>).forEach((sub) => {
+            defs.push({
+              gatewayId,
+              category: cat,
+              subcategory: sub,
+              high: undefined,
+              low: undefined,
+              priority: "Normal",
+              message: "Normal level reached",
             });
+          });
+        });
 
-            if (res.data.length > 0) {
-                setAlarmSettings(res.data);
-            } else {
-                // fallback: dynamic reading
-                const r2 = await axios.get<{ data: Reading[] }>(
-                    "http://localhost:3000/api/readingsdynamic",
-                    { params: { gatewayId, limit: 1, page: 1 } }
-                );
-                const rd = r2.data.data[0]?.data || {};
-                const defs: AlarmSetting[] = [];
+        setAlarmSettings(defs);
+      }
+    } catch (err) {
+      console.error("Failed to fetch alarm settings:", err);
+    }
+  };
 
-                Object.entries(rd).forEach(([cat, subObj]) => {
-                    Object.keys(subObj as Record<string, number>).forEach(sub => {
-                        defs.push({
-                            gatewayId,
-                            category: cat,
-                            subcategory: sub,
-                            high: undefined,
-                            low: undefined,
-                            priority: "Normal",
-                            message: "Normal level reached",
-                        });
-                    });
-                });
-                setAlarmSettings(defs);
-            }
-        } catch (err) {
-            console.error("Failed to fetch alarm settings:", err);
+  const saveAlarmSettings = async (settings: AlarmSetting[]) => {
+    try {
+      await axios.post(
+        "http://localhost:3000/api/alarm-settings",
+        { gatewayId, settings},
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
         }
-    };
+      );
+      setAlarmSettings(settings);
+    } catch (err) {
+      console.error("Failed to save alarm settings:", err);
+    }
+  };
 
-    // 📩 Alarm settings saver
-    const saveAlarmSettings = async (settings: AlarmSetting[]) => {
-        try {
-            await axios.post("http://localhost:3000/api/alarm-settings", {
-                gatewayId,
-                settings,
-            });
-            setAlarmSettings(settings);
-        } catch (err) {
-            console.error("Failed to save alarm settings:", err);
-        }
-    };
-
-    
-    return (
-        <DataContext.Provider
-            value={{
-                gatewayId,
-                gatewayIds,
-                reading,
-                historicalData,
-                totalCount,
-                fetchHistorical,
-                alarmSettings,
-                fetchAlarmSettings,
-                saveAlarmSettings,
-                fetchGatewayIds,
-            }}
-        >
-            {children}
-        </DataContext.Provider>
-    );
+  return (
+    <DataContext.Provider
+      value={{
+        gatewayId,
+        gatewayIds: gateways.map((g) => g.gatewayId),
+        gateways,
+        reading,
+        historicalData,
+        totalCount,
+        fetchHistorical,
+        alarmSettings,
+        fetchAlarmSettings,
+        saveAlarmSettings,
+        fetchGatewayIds,
+      }}
+    >
+      {children}
+    </DataContext.Provider>
+  );
 };
 
 export const useData = () => {
-    const ctx = useContext(DataContext);
-    if (!ctx) throw new Error("useData must be used within a DataProvider");
-    return ctx;
+  const ctx = useContext(DataContext);
+  if (!ctx) throw new Error("useData must be used within a DataProvider");
+  return ctx;
 };

@@ -4,6 +4,8 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import FileViewChart from "../Components/FileViewChart";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useData } from "../context/DataContext";
+
 
 interface ReadingData {
   [category: string]: { [subcategory: string]: number };
@@ -20,7 +22,7 @@ interface Reading {
 export default function FileView() {
   const [allData, setAllData] = useState<Reading[]>([]);
   const [filteredData, setFilteredData] = useState<Reading[]>([]);
-  const [gatewayIds, setGatewayIds] = useState<string[]>([]);
+  const { gateways } = useData();
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false); // 👈 loading state
 
@@ -60,55 +62,63 @@ export default function FileView() {
     }
   }, [gatewayId, selectedGateway]);
 
-  useEffect(() => {
-    axios
-      .get<string[]>("http://localhost:3000/api/gateways")
-      .then((res) => setGatewayIds(res.data))
-      .catch(console.error);
-  }, []);
+
 
   const fetchData = (showLoader: boolean) => {
-    if (!selectedGateway) return;
+  if (!selectedGateway) return;
 
-    const params: any = { gatewayId: selectedGateway, page, limit };
-    if (startDate) params.startDate = new Date(startDate).toISOString();
-    if (endDate) params.endDate = new Date(endDate).toISOString();
-    if (secInterval > 0) params.interval = secInterval;
+  const params: any = { gatewayId: selectedGateway, page, limit };
+  if (startDate) params.startDate = new Date(startDate).toISOString();
+  if (endDate) params.endDate = new Date(endDate).toISOString();
+  if (secInterval > 0) params.interval = secInterval;
 
-    if (showLoader) setIsLoading(true);
-    axios
-      .get("http://localhost:3000/api/readingsdynamic", { params })
-      .then((res) => {
-        const data = res.data.data as Reading[];
-        setAllData(data);
-        setTotalCount(res.data.total as number);
-        setFilteredData(data);
+  if (showLoader) setIsLoading(true);
 
-        if (!selectedCategory && data.length) {
-          const firstCat = Object.keys(data[0].data)[0];
+  axios
+    .get("http://localhost:3000/api/readingsdynamic", {
+      params,
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token") || ""}`, // ✅ fallback
+      },
+    })
+    .then((res) => {
+      const data = res.data?.data || [];
+      const total = res.data?.total || 0;
 
-          // collect all unique subs across all records for firstCat
-          const uniqueSubs = new Set<string>();
-          data.forEach((item) => {
-            const subs = item.data[firstCat];
-            if (subs) {
-              Object.keys(subs).forEach((key) => uniqueSubs.add(key));
-            }
-          });
+      setAllData(data);
+      setTotalCount(total);
+      setFilteredData(data);
 
-          updateParams({
-            category: firstCat,
-            subs: Array.from(uniqueSubs).join(","),
-          });
-        }
-      })
-      .catch(console.error)
-      .finally(() => {
-        if (showLoader) {
-          setTimeout(() => setIsLoading(false), 300);
-        }
-      });
-  };
+      if (!selectedCategory && data.length) {
+        const firstCat = Object.keys(data[0].data || {})[0];
+
+        if (!firstCat) return;
+
+        const uniqueSubs = new Set<string>();
+        data.forEach((item: Reading) => {
+          const subs = item.data?.[firstCat];
+          if (subs) {
+            Object.keys(subs).forEach((key) => uniqueSubs.add(key));
+          }
+        });
+
+        updateParams({
+          category: firstCat,
+          subs: Array.from(uniqueSubs).join(","),
+        });
+      }
+    })
+    .catch((err) => {
+      console.error("❌ Error fetching readings:", err);
+      toast.error("Failed to load data. Please check your token or server.");
+    })
+    .finally(() => {
+      if (showLoader) {
+        setTimeout(() => setIsLoading(false), 300);
+      }
+    });
+};
+
 
   useEffect(() => {
     if (selectedGateway && (startDate || endDate || secInterval > 0)) {
@@ -182,15 +192,15 @@ export default function FileView() {
   };
 
   const getSubcategoriesByCategory = (cat: string): string[] => {
-  const subSet = new Set<string>();
-  filteredData.forEach((entry) => {
-    const subData = entry.data[cat];
-    if (subData) {
-      Object.keys(subData).forEach((sub) => subSet.add(sub));
-    }
-  });
-  return Array.from(subSet);
-};
+    const subSet = new Set<string>();
+    filteredData.forEach((entry) => {
+      const subData = entry.data[cat];
+      if (subData) {
+        Object.keys(subData).forEach((sub) => subSet.add(sub));
+      }
+    });
+    return Array.from(subSet);
+  };
 
 
   return (
@@ -251,9 +261,9 @@ export default function FileView() {
             <option value="" disabled>
               Select Gateway
             </option>
-            {gatewayIds.map((id) => (
-              <option key={id} value={id}>
-                {id}
+            {gateways.map((g) => (
+              <option key={g.gatewayId} value={g.gatewayId}>
+                {g.name} ({g.gatewayId})
               </option>
             ))}
           </select>

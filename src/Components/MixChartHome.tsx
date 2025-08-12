@@ -6,29 +6,43 @@ import type { ApexOptions } from "apexcharts";
 const MixChartHome: React.FC = () => {
   const [series, setSeries] = useState<any[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
-  const [firstMetric, setFirstMetric] = useState<string>(""); // to label yAxis
+  const [firstMetric, setFirstMetric] = useState<string>("Metric"); // defaulted for safety
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // ✅ Fixed Promise.all syntax: both requests inside the array
         const [readingsRes, alarmsRes] = await Promise.all([
-          axios.get("http://localhost:3000/api/latest-readings"),
-          axios.get("http://localhost:3000/api/alarm-counts")
+          axios.get("http://localhost:3000/api/latest-readings", {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+            },
+          }),
+          axios.get("http://localhost:3000/api/alarm-counts", {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+            },
+          }),
         ]);
 
         const readingsData = readingsRes.data || [];
         const alarmData = alarmsRes.data || [];
 
-        const firstData = readingsData[0]?.data || {};
-        const categories = Object.keys(firstData);
+        if (!readingsData.length) {
+          console.warn("No readings data found");
+          return;
+        }
 
-        const firstCategory = categories?.[0] || "Unknown Category";
+        const firstData = readingsData[0]?.data || {};
+        const categoryNames = Object.keys(firstData);
+        const firstCategory = categoryNames[0] || "Unknown";
+
         const subKeys = firstData[firstCategory]
           ? Object.keys(firstData[firstCategory])
           : [];
 
-        const sub1 = subKeys?.[0] || "Metric";
-        setFirstMetric(sub1); // set for axis label
+        const sub1 = subKeys[0] || "Metric";
+        setFirstMetric(sub1);
 
         const gatewayMap: Record<string, any> = {};
 
@@ -44,7 +58,7 @@ const MixChartHome: React.FC = () => {
           gatewayMap[gw]["alarms"] = item.count ?? 0;
         });
 
-        const gatewayNames: string[] = Object.keys(gatewayMap);
+        const gatewayNames = Object.keys(gatewayMap);
         const readingSeries: number[] = [];
         const alarmSeries: number[] = [];
 
@@ -55,9 +69,19 @@ const MixChartHome: React.FC = () => {
         });
 
         setCategories(gatewayNames);
-        setSeries([ 
-          { name: sub1, data: readingSeries, type: "column", yAxisIndex: 0 },
-          { name: "Alarm Count", data: alarmSeries, type: "column", yAxisIndex: 1 }
+        setSeries([
+          {
+            name: sub1,
+            data: readingSeries,
+            type: "column",
+            yAxisIndex: 0,
+          },
+          {
+            name: "Alarm Count",
+            data: alarmSeries,
+            type: "column",
+            yAxisIndex: 1,
+          },
         ]);
       } catch (error) {
         console.error("❌ Error fetching graph data:", error);
@@ -70,49 +94,49 @@ const MixChartHome: React.FC = () => {
   const options: ApexOptions = {
     chart: {
       type: "bar",
-      height: 430
+      height: 430,
     },
     plotOptions: {
       bar: {
         horizontal: false,
         dataLabels: {
-          position: "top"
-        }
-      }
+          position: "top",
+        },
+      },
     },
     dataLabels: {
       enabled: true,
       offsetX: -6,
       style: {
         fontSize: "12px",
-        colors: ["#fff"]
-      }
+        colors: ["#fff"],
+      },
     },
     stroke: {
       show: true,
       width: 1,
-      colors: ["#fff"]
+      colors: ["#fff"],
     },
     tooltip: {
       shared: true,
-      intersect: false
+      intersect: false,
     },
     xaxis: {
-      categories: categories
+      categories: categories,
     },
     yaxis: [
       {
         title: {
-          text: firstMetric || "Metric"
-        }
+          text: firstMetric,
+        },
       },
       {
         opposite: true,
         title: {
-          text: "Alarm Count"
-        }
-      }
-    ]
+          text: "Alarm Count",
+        },
+      },
+    ],
   };
 
   return (
