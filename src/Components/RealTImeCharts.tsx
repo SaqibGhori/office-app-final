@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Chart from "react-apexcharts";
 import { useSocket } from "../hooks/useSocket";
 
@@ -20,31 +20,37 @@ type Reading = {
 const RealTimeCharts: React.FC<RealTimeChartProps> = ({ selectedTitle, gatewayId }) => {
   const [seriesMap, setSeriesMap] = useState<Record<string, number[]>>({});
   const [timestamps, setTimestamps] = useState<string[]>([]);
-console.log(gatewayId , "testing")
-  // Reset series when selectedTitle changes
+  const userId = localStorage.getItem("token") ?? undefined;
+
+  // Reset graph when title changes
   useEffect(() => {
     setSeriesMap({});
     setTimestamps([]);
   }, [selectedTitle]);
 
-  useSocket((data: Reading) => {
-    if (data && selectedTitle && data.data[selectedTitle]) {
-      const categoryData = data.data[selectedTitle];
-      const currentTime = new Date().toLocaleTimeString();
+  // Realtime reading handler
+  const handleReading = useCallback((data: Reading) => {
+    if (!selectedTitle || !data?.data?.[selectedTitle]) return;
 
-      setTimestamps((prev) => [...prev, currentTime].slice(-15));
+    const categoryData = data.data[selectedTitle];
+    const currentTime = new Date().toLocaleTimeString();
 
-      setSeriesMap((prevMap) => {
-        const updatedMap = { ...prevMap };
-        Object.entries(categoryData).forEach(([label, value]) => {
-          const prevData = updatedMap[label] || [];
-          updatedMap[label] = [...prevData, value].slice(-15);
-        });
-        return updatedMap;
+    setTimestamps((prev) => [...prev, currentTime].slice(-15));
+
+    setSeriesMap((prevMap) => {
+      const updatedMap = { ...prevMap };
+      Object.entries(categoryData).forEach(([label, value]) => {
+        const prevData = updatedMap[label] || [];
+        updatedMap[label] = [...prevData, value].slice(-15);
       });
-    }
-  }, gatewayId);
+      return updatedMap;
+    });
+  }, [selectedTitle]);
 
+  // Setup socket connection
+  useSocket(handleReading, gatewayId, userId);
+
+  // Convert seriesMap to ApexChart format
   const series = Object.entries(seriesMap).map(([label, data]) => ({
     name: label,
     data,
@@ -56,7 +62,7 @@ console.log(gatewayId , "testing")
       height: 350,
       animations: {
         enabled: true,
-        dynamicAnimation: { speed: 500 }
+        dynamicAnimation: { speed: 500 },
       },
       toolbar: { show: false },
       zoom: { enabled: false },
@@ -69,20 +75,22 @@ console.log(gatewayId , "testing")
       width: 2,
     },
     legend: {
-      position: 'top',
+      position: "bottom",
     },
     title: {
       text: selectedTitle || "Real-Time Chart",
-      align: 'left',
+      align: "left",
     },
   };
 
   return (
     <div className="p-4 bg-white shadow rounded">
-      {series.length > 0 ? (
+      {series.some((s) => s.data.length > 0) ? (
         <Chart options={options} series={series} type="line" height={400} />
       ) : (
-        <p className="text-gray-500 text-sm">Waiting for {selectedTitle || "data"}...</p>
+        <p className="text-gray-500 text-sm">
+          Waiting for {selectedTitle || "data"}...
+        </p>
       )}
     </div>
   );

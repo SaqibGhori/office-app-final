@@ -5,7 +5,12 @@ module.exports = {
     "./src/**/*.{js,ts,jsx,tsx}", // Includes TypeScript files
   ],
   theme: {
-    extend: {},
+    extend: {
+       colors: {
+        primary: "#303655",   // Navy
+        secondary: "#BFCBCE", // Gray
+      },
+    },
   },
   plugins: [],
 }

@@ -102,7 +102,7 @@ const Home = () => {
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
-  const [gatewayIdInput, setGatewayIdInput] = useState("");
+  const [ gatewayIdInput, setGatewayIdInput] = useState("");
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [success, setSuccess] = useState(false);
@@ -110,7 +110,7 @@ const Home = () => {
   useEffect(() => {
     if (showModal) {
       setGatewayIdInput("gw-" + Math.floor(Math.random() * 100000));
-    }
+    } 
   }, [showModal]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -128,6 +128,7 @@ const Home = () => {
         setName("");
         setLocation("");
         setSuccess(false);
+        console.log(gatewayIdInput , "moiz")
       }, 1500);
     } catch (err) {
       console.error("❌ Error creating gateway:", err);
@@ -157,6 +158,29 @@ const Home = () => {
 
   return (
     <div className="mx-auto w-[95%] flex gap-5">
+      {/* RIGHT Sidebar */}
+      <div className="w-[20%] pb-5 overflow-y-scroll bg-white text-center">
+        <h2 className="text-2xl font-bold mt-4">Gateways</h2>
+
+        <button
+          className="py-2 px-6 bg-blue-600 text-white rounded hover:bg-blue-700 my-3"
+          onClick={() => setShowModal(true)}
+        >
+          ➕ Add Device
+        </button>
+
+        {gateways.map((gateway) => (
+          <button
+            key={gateway._id}
+            onClick={() => handleSelectGateway(gateway.gatewayId)}
+            className="py-3 px-6 mx-auto border rounded-lg bg-gray-800 text-white hover:bg-gray-600 my-2 block text-left"
+          >
+            <div className="font-bold">{gateway.name}</div>
+            <div className="text-sm">{gateway.location}</div>
+            <div className="text-xs opacity-60">ID: {gateway.gatewayId}</div>
+          </button>
+        ))}
+      </div>
       {/* LEFT Side */}
       <div className="w-[80%]">
         <div className="bg-white mb-4">
@@ -232,29 +256,7 @@ const Home = () => {
         </div>
       </div>
 
-      {/* RIGHT Sidebar */}
-      <div className="w-[20%] pb-5 overflow-y-scroll bg-white text-center">
-        <h2 className="text-2xl font-bold mt-4">Gateways</h2>
-
-        <button
-          className="py-2 px-6 bg-blue-600 text-white rounded hover:bg-blue-700 my-3"
-          onClick={() => setShowModal(true)}
-        >
-          ➕ Add Device
-        </button>
-
-        {gateways.map((gateway) => (
-          <button
-            key={gateway._id}
-            onClick={() => handleSelectGateway(gateway.gatewayId)}
-            className="py-3 px-6 mx-auto border rounded-lg bg-gray-800 text-white hover:bg-gray-600 my-2 block text-left"
-          >
-            <div className="font-bold">{gateway.name}</div>
-            <div className="text-sm">{gateway.location}</div>
-            <div className="text-xs opacity-60">ID: {gateway.gatewayId}</div>
-          </button>
-        ))}
-      </div>
+      
 
       {/* Modal */}
       {showModal && (

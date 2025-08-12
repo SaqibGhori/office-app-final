@@ -1,27 +1,27 @@
 import Navbar from '../Components/Navbar';
-import { Outlet, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { Outlet } from 'react-router-dom';
+// import { useAuth } from '../context/AuthContext';
 
 const DashboardLayout = () => {
-  const { logout } = useAuth();
-  const navigate   = useNavigate();
+  // const { logout } = useAuth();
+  // const navigate   = useNavigate();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login', { replace: true });
-  };
+  // const handleLogout = () => {
+  //   logout();
+  //   navigate('/login', { replace: true });
+  // };
 
   return (
     <div className="flex flex-col min-h-screen">
       {/* Top Navbar */}
-       <header className="w-full shadow z-10 flex justify-between items-center p-2">
-       <Navbar />
-       <button
+       <header className="">
+       {/* <Navbar /> */}
+       {/* <button
          onClick={handleLogout}
          className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
        >
          Logout
-       </button>
+       </button> */}
      </header>
 
       <div className="flex flex-1 overflow-hidden">

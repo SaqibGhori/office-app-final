@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 
 export default function LoginPage() {
    const { token } = useAuth();
-     if (token) return <Navigate to="/dashboard" replace />;
+     if (token) return <Navigate to="/" replace />;
 
      const navigate  = useNavigate();
 
@@ -26,7 +26,7 @@ export default function LoginPage() {
       if (!res.ok) throw new Error(body.msg || 'Login failed');
       // Save token & role
       login(body.token, body.role, email);
-      navigate('/dashboard');
+      navigate('/');
     } catch (err: any) {
       setError(err.message);
     }

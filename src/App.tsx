@@ -1,11 +1,28 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import { DataProvider } from './context/DataContext';
-import ProtectedRoute from './Components/ProtectedRoute';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  useLocation
+} from 'react-router-dom';
 
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { DataProvider } from './context/DataContext';
+
+import ProtectedRoute from './context/ProtectedRoute';
+import SuperProtectedRoute from './Components/SuperProtectedRoute';
+
+
+// Public pages
+import ShowHome from './Pages/ShowHome';
+import ShowAbout from './Pages/ShowAbout';
+import ShowContact from './Pages/ShowContact';
+import PrivacyPolicy from './Pages/PrivacyPolicy';
 import LoginPage from './Pages/LoginPage';
 import RegisterPage from './Pages/RegisterPage';
+
+// Secure user pages
 import DashboardLayout from './Layouts/DashboardLayout';
 import Home from './Pages/Home';
 import MainDashboard from './Pages/MainDashboard';
@@ -16,37 +33,80 @@ import Alaram from './Pages/Alaram';
 import AlarmDownloadPage from './Pages/AlarmDownloadPage';
 import Settings from './Pages/Settings';
 
+// Superadmin
+import SuperSignupPage from './Pages/SuperSignupPage';
+import SuperLoginPage from './Pages/SuperLoginPage';
+import SuperHome from './Pages/SuperHome';
+import Navbar from './Components/Navbar';
+
 export default function App() {
   return (
-    <AuthProvider>
-        <Router>
-      <DataProvider>
+    <Router>
+      <AuthProvider>
+        <DataProvider>
+          
+          <Navbar/>
           <Routes>
-            {/* Public routes */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+            {/* ───────── Public Showcase ───────── */}
+            <Route path="/" element={<ShowHome />} />
+            <Route path="/aboutus" element={<ShowAbout />} />
+            <Route path="/contact" element={<ShowContact />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
 
-            {/* Protected routes */}
-            <Route element={<ProtectedRoute />}>
-              {/* Wrap protected pages in DashboardLayout */}
-              <Route element={<DashboardLayout />}>
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                <Route path="/dashboard" element={<Home />} />
-                <Route path="/maindashboard" element={<MainDashboard />} />
-                <Route path="/fileview" element={<FileView />} />
-                <Route path="/fileview/export" element={<FileViewDownloadPage />} />
-                <Route path="/harmonics" element={<Harmonics />} />
-                <Route path="/alaram" element={<Alaram />} />
-                <Route path="/alarm-download" element={<AlarmDownloadPage />} />
-                <Route path="/settings" element={<Settings />} />
-              </Route>
+            {/* ───────── Superadmin ───────── */}
+            <Route path="/superadmin/signup" element={<SuperSignupPage />} />
+            <Route path="/superadmin/login" element={<SuperLoginPage />} />
+            <Route element={<SuperProtectedRoute />}>
+              <Route path="/superadmin/home" element={<SuperHome />} />
             </Route>
 
-            {/* Fallback for unmatched routes */}
-            <Route path="*" element={<Navigate to="/login" replace />} />
+            {/* ───────── Auth Pages ───────── */}
+            <Route
+              path="/login"
+              element={
+                <AuthWrapper>
+                  <LoginPage />
+                </AuthWrapper>
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <AuthWrapper>
+                  <RegisterPage />
+                </AuthWrapper>
+              }
+            />
+
+            {/* ───────── Secure User Flow ───────── */}
+            <Route
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/dashboard" element={<Home />} />
+              <Route path="/maindashboard" element={<MainDashboard />} />
+              <Route path="/fileview" element={<FileView />} />
+              <Route path="/fileview/export" element={<FileViewDownloadPage />} />
+              <Route path="/harmonics" element={<Harmonics />} />
+              <Route path="/alaram" element={<Alaram />} />
+              <Route path="/alarm-download" element={<AlarmDownloadPage />} />
+              <Route path="/settings" element={<Settings />} />
+            </Route>
+
+            {/* ───────── Fallback ───────── */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-      </DataProvider>
-        </Router>
-    </AuthProvider>
+        </DataProvider>
+      </AuthProvider>
+    </Router>
   );
+}
+
+/** Redirect to dashboard if already logged in */
+function AuthWrapper({ children }: { children: React.ReactNode }) {
+  const { token } = useAuth();
+  return token ? <Navigate to="/" replace /> : <>{children}</>;
 }
