@@ -8,7 +8,7 @@ export default function LoginPage() {
   const { search, hash } = useLocation();
 
   // already logged in? go straight to dashboard
-  if (token) return <Navigate to="/dashboard" replace />;
+  if (token) return <Navigate to="/" replace />;
 
   const [email, setEmail] = useState('');
   const [password, setPass] = useState('');
@@ -28,7 +28,7 @@ export default function LoginPage() {
 
     if (t) {
       login(t, r, e);
-      navigate('/dashboard', { replace: true });
+      navigate('/', { replace: true });
     }
   }, [search, hash, login, navigate]);
 
@@ -47,7 +47,7 @@ export default function LoginPage() {
 
       // same flow as Google: store & go
       login(body.token, body.role, email);
-      navigate('/dashboard');
+      navigate('/');
     } catch (err: any) {
       setError(err.message);
     } finally {

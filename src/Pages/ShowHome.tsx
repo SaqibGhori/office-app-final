@@ -1,10 +1,9 @@
+import PricingCards from "../Components/PricingCards"
 
 const ShowHome = () => {
   return (
     <div>
-      <h1>
-        Home
-      </h1>
+    <PricingCards/>
     </div>
   )
 }

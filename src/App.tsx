@@ -3,83 +3,97 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Navigate
+  Navigate,
+  useLocation
 } from 'react-router-dom';
 
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { DataProvider } from './context/DataContext';
 
-import ProtectedRoute      from './Components/ProtectedRoute';
+import ProtectedRoute from './context/ProtectedRoute';
 import SuperProtectedRoute from './Components/SuperProtectedRoute';
 
-// Showcase UI components
-import ShowNavbar       from './Components/ShowNavbar';
-import ShowHome         from './Pages/ShowHome';
-import ShowAbout        from './Pages/ShowAbout';
-import ShowContact      from './Pages/ShowContact';
-import PrivacyPolicy    from './Pages/PrivacyPolicy';
 
-// User & Superadmin flows
-import LoginPage          from './Pages/LoginPage';
-import RegisterPage       from './Pages/RegisterPage';
-import DashboardLayout    from './Layouts/DashboardLayout';
-import Home               from './Pages/Home';
-import MainDashboard      from './Pages/MainDashboard';
-import FileView           from './Pages/FIleView';
+// Public pages
+import ShowHome from './Pages/ShowHome';
+import ShowAbout from './Pages/ShowAbout';
+import ShowContact from './Pages/ShowContact';
+import PrivacyPolicy from './Pages/PrivacyPolicy';
+import LoginPage from './Pages/LoginPage';
+import RegisterPage from './Pages/RegisterPage';
+
+// Secure user pages
+import DashboardLayout from './Layouts/DashboardLayout';
+import Home from './Pages/Home';
+import MainDashboard from './Pages/MainDashboard';
+import FileView from './Pages/FIleView';
 import FileViewDownloadPage from './Pages/FileViewDownloadPage';
-import Harmonics          from './Pages/Harmonics';
-import Alaram             from './Pages/Alaram';
-import AlarmDownloadPage  from './Pages/AlarmDownloadPage';
-import Settings           from './Pages/Settings';
+import Harmonics from './Pages/Harmonics';
+import Alaram from './Pages/Alaram';
+import AlarmDownloadPage from './Pages/AlarmDownloadPage';
+import Settings from './Pages/Settings';
 
-import SuperSignupPage    from './Pages/SuperSignupPage';
-import SuperLoginPage     from './Pages/SuperLoginPage';
-import SuperHome          from './Pages/SuperHome';
+// Superadmin
+import SuperSignupPage from './Pages/SuperSignupPage';
+import SuperLoginPage from './Pages/SuperLoginPage';
+import SuperHome from './Pages/SuperHome';
+import Navbar from './Components/Navbar';
 
 export default function App() {
   return (
     <Router>
-      {/* Always‑visible navbar for the public showcase */}
-      <ShowNavbar />
-
       <AuthProvider>
         <DataProvider>
+          
+          <Navbar/>
           <Routes>
+            {/* ───────── Public Showcase ───────── */}
+            <Route path="/" element={<ShowHome />} />
+            <Route path="/aboutus" element={<ShowAbout />} />
+            <Route path="/contact" element={<ShowContact />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
 
-            {/* ───────── Showcase Pages ───────── */}
-            <Route path="/"            element={<ShowHome />} />
-            <Route path="/about"       element={<ShowAbout />} />
-            <Route path="/contact"     element={<ShowContact />} />
-            <Route path="/privacy"     element={<PrivacyPolicy />} />
-
-            {/* ───────── Superadmin Flow ───────── */}
+            {/* ───────── Superadmin ───────── */}
             <Route path="/superadmin/signup" element={<SuperSignupPage />} />
-            <Route path="/superadmin/login"  element={<SuperLoginPage />} />
-
+            <Route path="/superadmin/login" element={<SuperLoginPage />} />
             <Route element={<SuperProtectedRoute />}>
               <Route path="/superadmin/home" element={<SuperHome />} />
             </Route>
 
-            {/* ───────── Normal User Flow ───────── */}
-            {/* Public user routes */}
-            <Route path="/login"    element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+            {/* ───────── Auth Pages ───────── */}
+            <Route
+              path="/login"
+              element={
+                <AuthWrapper>
+                  <LoginPage />
+                </AuthWrapper>
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <AuthWrapper>
+                  <RegisterPage />
+                </AuthWrapper>
+              }
+            />
 
-            {/* Protected user routes */}
-            <Route element={<ProtectedRoute />}>
-              <Route element={<DashboardLayout />}>
-                <Route path="/dashboard"      element={<Home />} />
-                <Route path="/maindashboard"  element={<MainDashboard />} />
-                <Route path="/fileview"       element={<FileView />} />
-                <Route path="/fileview/export" element={<FileViewDownloadPage />} />
-                <Route path="/harmonics"      element={<Harmonics />} />
-                <Route path="/alaram"         element={<Alaram />} />
-                <Route path="/alarm-download" element={<AlarmDownloadPage />} />
-                <Route path="/settings"       element={<Settings />} />
-
-                {/* root redirect once logged in */}
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-              </Route>
+            {/* ───────── Secure User Flow ───────── */}
+            <Route
+              element={
+                <ProtectedRoute>
+                  <DashboardLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/dashboard" element={<Home />} />
+              <Route path="/maindashboard" element={<MainDashboard />} />
+              <Route path="/fileview" element={<FileView />} />
+              <Route path="/fileview/export" element={<FileViewDownloadPage />} />
+              <Route path="/harmonics" element={<Harmonics />} />
+              <Route path="/alaram" element={<Alaram />} />
+              <Route path="/alarm-download" element={<AlarmDownloadPage />} />
+              <Route path="/settings" element={<Settings />} />
             </Route>
 
             {/* ───────── Fallback ───────── */}
@@ -89,4 +103,10 @@ export default function App() {
       </AuthProvider>
     </Router>
   );
+}
+
+/** Redirect to dashboard if already logged in */
+function AuthWrapper({ children }: { children: React.ReactNode }) {
+  const { token } = useAuth();
+  return token ? <Navigate to="/" replace /> : <>{children}</>;
 }

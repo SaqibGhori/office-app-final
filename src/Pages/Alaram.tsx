@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useSocket } from "../hooks/useSocket";
 import { useData } from "../context/DataContext";
 import axios from "axios";
@@ -14,7 +14,7 @@ interface AlarmItem {
 }
 
 export default function AlarmPage() {
-  const { gatewayId, alarmSettings, fetchAlarmSettings } = useData();
+  const { gatewayId, alarmSettings, fetchAlarmSettings , gateways } = useData();
   const { search } = useLocation();
   const [alarms, setAlarms] = useState<AlarmItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +26,10 @@ export default function AlarmPage() {
   const socket = useSocket();
   const navigate = useNavigate();
   const [isFilterActive, setIsFilterActive] = useState(false);
+
+  const selectedGateway = gateways?.find((g) => g.gatewayId === gatewayId);
+  const gatewayName = selectedGateway?.name || "Unknown";
+  const gatewayLocation = selectedGateway?.location || "";
 
   // 🚀 Fetch Alarms Function
   const fetchAlarms = () => {
@@ -41,19 +45,19 @@ export default function AlarmPage() {
     if (startDate) params.startDate = new Date(startDate).toISOString();
     if (endDate) params.endDate = new Date(endDate).toISOString();
 
-   axios
-  .get("http://localhost:3000/api/alarm-records", {
-    params,
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-  })
-  .then((res) => {
-    setAlarms(res.data.data);
-    setTotalPages(res.data.totalPages || 1); // fallback in case undefined
-  })
-  .catch(console.error)
-  .finally(() => setLoading(false));
+    axios
+      .get("http://localhost:3000/api/alarm-records", {
+        params,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      })
+      .then((res) => {
+        setAlarms(res.data.data);
+        setTotalPages(res.data.totalPages || 1); // fallback in case undefined
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }
 
 
@@ -63,25 +67,25 @@ export default function AlarmPage() {
   }, [gatewayId]);
 
   // 🔁 Listen to real-time socket alarms (only if no filters applied)
- const handler = useCallback((newAlarms: AlarmItem[]) => {
-  if (!isFilterActive) {
-    setAlarms((prev) => {
-      const merged = [...newAlarms, ...prev];
-      merged.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-      return merged.slice(0, perPage);
-    });
-  }
-}, [isFilterActive, perPage]);
+  const handler = useCallback((newAlarms: AlarmItem[]) => {
+    if (!isFilterActive) {
+      setAlarms((prev) => {
+        const merged = [...newAlarms, ...prev];
+        merged.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+        return merged.slice(0, perPage);
+      });
+    }
+  }, [isFilterActive, perPage]);
 
-useEffect(() => {
-  if (gatewayId && socket) {
-    socket.on("new-alarms", handler);
+  useEffect(() => {
+    if (gatewayId && socket) {
+      socket.on("new-alarms", handler);
 
-    return () => {
-      socket.off("new-alarms", handler);
-    };
-  }
-}, [gatewayId, socket, handler]);
+      return () => {
+        socket.off("new-alarms", handler);
+      };
+    }
+  }, [gatewayId, socket, handler]);
 
 
 
@@ -108,8 +112,20 @@ useEffect(() => {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Alarm Page for {gatewayId}</h1>
-
+      <div className="flex justify-between items-center">
+      <div>
+          <h1 className="text-2xl font-bold">
+            {gatewayName}
+            <span className="text-sm text-gray-500 ml-2">({gatewayId})</span>
+          </h1>
+          {gatewayLocation && (
+            <p className="text-sm text-gray-600">{gatewayLocation}</p>
+          )}
+        </div>
+      <Link to={`/settings${gatewayId ? `?gateway=${gatewayId}` : ""}`}  className="px-4 py-2  bg-gray-500 text-white rounded">
+        Alarm Settings
+      </Link>
+      </div>
       {/* Filters Section */}
       <div className="flex gap-4 mb-4 items-end">
         <div>
@@ -189,24 +205,22 @@ useEffect(() => {
                     <td className="px-3 py-2">{a.category}</td>
                     <td className="px-3 py-2">{a.subcategory}</td>
                     <td
-                      className={`px-3 py-2 font-mono ${
-                        a.priority === "High"
+                      className={`px-3 py-2 font-mono ${a.priority === "High"
                           ? "text-red-600"
                           : a.priority === "Normal"
-                          ? "text-green-600"
-                          : "text-blue-600"
-                      }`}
+                            ? "text-green-600"
+                            : "text-blue-600"
+                        }`}
                     >
                       {a.value}
                     </td>
                     <td
-                      className={`px-3 py-2 font-semibold ${
-                        a.priority === "High"
+                      className={`px-3 py-2 font-semibold ${a.priority === "High"
                           ? "text-red-600"
                           : a.priority === "Normal"
-                          ? "text-green-600"
-                          : "text-blue-600"
-                      }`}
+                            ? "text-green-600"
+                            : "text-blue-600"
+                        }`}
                     >
                       {a.priority}
                     </td>
