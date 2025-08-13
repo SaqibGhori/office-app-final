@@ -23,7 +23,7 @@ interface ChartState {
 
 const PieChartHome: React.FC = () => {
   // 2️⃣ useState ko ChartState type do
-  const [state, setState] = React.useState<ChartState>({
+  const [state] = React.useState<ChartState>({
     series: [44, 55, 13, 43, 22],
     options: {
       chart: {

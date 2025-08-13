@@ -62,7 +62,7 @@ export default function FileView() {
     }
   }, [gatewayId, selectedGateway]);
 
-
+console.log(allData)
 
   const fetchData = (showLoader: boolean) => {
   if (!selectedGateway) return;

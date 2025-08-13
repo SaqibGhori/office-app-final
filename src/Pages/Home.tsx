@@ -31,6 +31,8 @@ const Home = () => {
 
   const token = localStorage.getItem("token");
 
+console.log(loading)
+
   // Socket Subscription with Token
   const socket = useSocket(undefined, undefined, token || undefined);
 

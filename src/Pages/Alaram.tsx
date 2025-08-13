@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useSocket } from "../hooks/useSocket";
 import { useData } from "../context/DataContext";
 import axios from "axios";
@@ -14,8 +14,10 @@ interface AlarmItem {
 }
 
 export default function AlarmPage() {
-  const { gatewayId, alarmSettings, fetchAlarmSettings , gateways } = useData();
-  const { search } = useLocation();
+  const { gatewayId,
+    //  alarmSettings,
+      fetchAlarmSettings , gateways } = useData();
+  // const { search } = useLocation();
   const [alarms, setAlarms] = useState<AlarmItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
