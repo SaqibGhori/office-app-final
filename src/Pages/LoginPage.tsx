@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, Navigate, useLocation } from 'react-router-dom';
+import { useNavigate, Navigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import googleloginicon from '../../assets/googleloginicon.png'
 
 export default function LoginPage() {
   const { token, login } = useAuth();
@@ -23,7 +24,7 @@ export default function LoginPage() {
         : new URLSearchParams(search);       // handle /login?token=...
 
     const t = params.get('token');
-    const r = params.get('role')  || 'user';
+    const r = params.get('role') || 'user';
     const e = params.get('email') || '';
 
     if (t) {
@@ -56,51 +57,61 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto p-4">
-      <h2 className="text-xl mb-4">Login</h2>
+    <div className='flex w-[90%] mx-auto my-10'>
+      <div className='w-[50%] h-[100vh] bg-primary rounded-[40px] flex justify-center items-center'>
+        <div className='bg-yellow-300 '>testing</div>
+      </div>
 
-      <form onSubmit={onSubmit} className="space-y-4">
-        <input
-          type="email"
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          placeholder="Email"
-          required
-          className="w-full p-2 border rounded"
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={e => setPass(e.target.value)}
-          placeholder="Password"
-          required
-          className="w-full p-2 border rounded"
-        />
+      <div className='w-[50%] bg-secondary rounded-[40px] flex justify-center items-center'>
+        <div className="">
+          <h2 className="text-5xl font-sans mb-4">Login</h2>
 
-        {error && <p className="text-red-500">{error}</p>}
+          <form onSubmit={onSubmit} className="">
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="Email"
+              required
+              className="w-full p-2 mb-4 border rounded"
+            />
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPass(e.target.value)}
+              placeholder="Password"
+              required
+              className="w-full p-2 mb-4 border rounded"
+            />
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full bg-green-600 text-white p-2 rounded disabled:opacity-60"
-        >
-          {submitting ? 'Logging in…' : 'Login'}
-        </button>
-      </form>
+            {error && <p className="text-red-500">{error}</p>}
+            <p className=''>If you dont have an account please
+              <Link to={'/register'}
+                className="w-full text-red-700 px-2"
+              >
+                Register
+              </Link>
+              first.
+            </p>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="w-full bg-primary text-white p-2 rounded disabled:opacity-60"
+            >
+              {submitting ? 'Logging in…' : 'Login'}
+            </button>
+          </form>
 
-      <button
-        onClick={() => navigate('/register')}
-        className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 mt-4"
-      >
-        Go to Register
-      </button>
 
-      <button
-        onClick={() => { window.location.href = 'http://localhost:3000/api/auth/google'; }}
-        className="w-full mt-3 bg-red-600 text-white p-2 rounded"
-      >
-        Continue with Google
-      </button>
+          <button
+            onClick={() => { window.location.href = 'http://localhost:3000/api/auth/google'; }}
+            className="w-full mt-3 flex justify-center items-center  bg-white p-2 rounded"
+          >
+            <img src={googleloginicon} className='w-6 mr-3' alt="" /><span> Login with Google</span>
+          </button>
+        </div>
+      </div>
     </div>
+
   );
 }
