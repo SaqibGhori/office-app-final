@@ -159,13 +159,13 @@ console.log(loading)
   if (!token) return <div className="p-6 text-lg">⏳ Loading user info...</div>;
 
   return (
-    <div className="mx-auto w-[95%] flex gap-5">
+    <div className="mx-auto flex bg-secondary">
       {/* RIGHT Sidebar */}
-      <div className="w-[20%] pb-5 overflow-y-scroll bg-white text-center">
+      <div className="w-[20%] pb-5  text-center">
         <h2 className="text-2xl font-bold mt-4">Gateways</h2>
 
         <button
-          className="py-2 px-6 bg-blue-600 text-white rounded hover:bg-blue-700 my-3"
+          className="py-2 px-6 bg-primary text-white rounded hover:bg-blue-950 my-3"
           onClick={() => setShowModal(true)}
         >
           ➕ Add Device
@@ -175,11 +175,11 @@ console.log(loading)
           <button
             key={gateway._id}
             onClick={() => handleSelectGateway(gateway.gatewayId)}
-            className="py-3 px-6 mx-auto border rounded-lg bg-gray-800 text-white hover:bg-gray-600 my-2 block text-left"
+            className="py-3 px-6 mx-auto border w-40 rounded-lg bg-gray-800 text-white hover:bg-gray-600 my-2 block text-left"
           >
             <div className="font-bold">{gateway.name}</div>
-            <div className="text-sm">{gateway.location}</div>
-            <div className="text-xs opacity-60">ID: {gateway.gatewayId}</div>
+            {/* <div className="text-sm">{gateway.location}</div>
+            <div className="text-xs opacity-60">ID: {gateway.gatewayId}</div> */}
           </button>
         ))}
       </div>
@@ -189,7 +189,7 @@ console.log(loading)
           <MixChartHome />
         </div>
 
-        <div className="bg-white">
+        <div className="bg-white min-h-80">
           <h2 className="text-xl font-bold p-3">Live + Saved Alarms</h2>
 
           <div className="overflow-x-auto max-h-[300px] overflow-y-auto p-4">

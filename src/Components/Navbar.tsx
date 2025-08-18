@@ -14,7 +14,7 @@ const Navbar: React.FC = () => {
   const gatewayId = new URLSearchParams(search).get("gateway");
 
   return (
-    <nav className="bg-white border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700">
+    <nav className="bg-gradient-to-r from-[#BFCBCE] to-[#303655ac]">
       <div className="max-w-screen-xl mx-auto p-4 flex items-center justify-between">
 
         <ul className="flex items-center space-x-6 text-gray-900 dark:text-white font-medium  " >
@@ -29,7 +29,7 @@ const Navbar: React.FC = () => {
           {token && (
             <>
               <li>
-                <Link to={`/dashboard`} className="hover:text-blue-600">Main Dashboard</Link>
+                <Link to={`/dashboard`} className="">Main Dashboard</Link>
               </li>
               {gatewayId ?
                 <>
