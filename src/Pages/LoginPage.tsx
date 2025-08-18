@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, Navigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import googleloginicon from '../../assets/googleloginicon.png'
+import watticon from '../../assets/watticon.png'
 
 export default function LoginPage() {
   const { token, login } = useAuth();
@@ -15,7 +16,11 @@ export default function LoginPage() {
   const [password, setPass] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-
+const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setReady(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
   // ⬇️ auto-login when redirected back from Google with token in URL
   useEffect(() => {
     const params =
@@ -57,61 +62,66 @@ export default function LoginPage() {
   };
 
   return (
-    <div className='flex w-[90%] mx-auto my-10'>
-      <div className='w-[50%] h-[100vh] bg-primary rounded-[40px] flex justify-center items-center'>
-        <div className='bg-yellow-300 '>testing</div>
-      </div>
-
-      <div className='w-[50%] bg-secondary rounded-[40px] flex justify-center items-center'>
-        <div className="">
-          <h2 className="text-5xl font-sans mb-4">Login</h2>
-
-          <form onSubmit={onSubmit} className="">
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="Email"
-              required
-              className="w-full p-2 mb-4 border rounded"
-            />
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPass(e.target.value)}
-              placeholder="Password"
-              required
-              className="w-full p-2 mb-4 border rounded"
-            />
-
-            {error && <p className="text-red-500">{error}</p>}
-            <p className=''>If you dont have an account please
-              <Link to={'/register'}
-                className="w-full text-red-700 px-2"
-              >
-                Register
-              </Link>
-              first.
-            </p>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full bg-primary text-white p-2 rounded disabled:opacity-60"
-            >
-              {submitting ? 'Logging in…' : 'Login'}
-            </button>
-          </form>
-
-
-          <button
-            onClick={() => { window.location.href = 'http://localhost:3000/api/auth/google'; }}
-            className="w-full mt-3 flex justify-center items-center  bg-white p-2 rounded"
-          >
-            <img src={googleloginicon} className='w-6 mr-3' alt="" /><span> Login with Google</span>
-          </button>
-        </div>
-      </div>
+    <div className="flex w-[90%] bg-primary rounded-[44px] mx-auto my-10 overflow-hidden">
+  {/* LEFT: logo side (as-is) */}
+  <div className="w-[50%] h-[100vh] flex justify-center items-center">
+    <div>
+      <img src={watticon} className="w-48 mx-auto" alt="" />
+      <h1 className="text-white font-serif font-bold text-5xl">Watt Matrix</h1>
     </div>
+  </div>
+
+  {/* RIGHT: form box slides in from LEFT now */}
+  <div
+    className={`w-[50%] bg-secondary rounded-[40px] shadow-2xl flex justify-center items-center
+    transform transition-all duration-700 ease-out will-change-transform
+    ${ready ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"}`}
+  >
+    <div className="w-[80%]">
+      <h2 className="text-5xl font-sans mb-4 text-primary">Login</h2>
+
+      <form onSubmit={onSubmit}>
+        <input
+          type="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          placeholder="Email"
+          required
+          className="w-full p-2 mb-4 border rounded"
+        />
+        <input
+          type="password"
+          value={password}
+          onChange={e => setPass(e.target.value)}
+          placeholder="Password"
+          required
+          className="w-full p-2 mb-4 border rounded"
+        />
+        {error && <p className="text-red-500">{error}</p>}
+        <p>
+          If you dont have an account please{" "}
+          <Link to="/register" className="text-red-700 px-2">Register</Link>
+          first.
+        </p>
+        <button
+          type="submit"
+          disabled={submitting}
+          className="w-full bg-primary text-white p-2 rounded disabled:opacity-60 mt-3"
+        >
+          {submitting ? "Logging in…" : "Login"}
+        </button>
+      </form>
+
+      <button
+        onClick={() => { window.location.href = "http://localhost:3000/api/auth/google"; }}
+        className="w-full mt-3 flex justify-center items-center bg-white p-2 rounded"
+      >
+        <img src={googleloginicon} className="w-6 mr-3" alt="" />
+        <span>Login with Google</span>
+      </button>
+    </div>
+  </div>
+</div>
 
   );
 }
