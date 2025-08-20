@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import ReactApexChart from "react-apexcharts";
 import axios from "axios";
 import type { ApexOptions } from "apexcharts";
+import { api } from "../api";
 
 const MixChartHome: React.FC = () => {
   const [series, setSeries] = useState<any[]>([]);
@@ -13,12 +14,12 @@ const MixChartHome: React.FC = () => {
       try {
         // ✅ Fixed Promise.all syntax: both requests inside the array
         const [readingsRes, alarmsRes] = await Promise.all([
-          axios.get("http://localhost:3000/api/latest-readings", {
+          api.get("/api/latest-readings", {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
             },
           }),
-          axios.get("http://localhost:3000/api/alarm-counts", {
+          axios.get("/api/alarm-counts", {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
             },

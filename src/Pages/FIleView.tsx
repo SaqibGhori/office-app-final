@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+// import axios from "axios";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import FileViewChart from "../Components/FileViewChart";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useData } from "../context/DataContext";
-
+import { api } from "../api";
 
 interface ReadingData {
   [category: string]: { [subcategory: string]: number };
@@ -74,8 +74,7 @@ console.log(allData)
 
   if (showLoader) setIsLoading(true);
 
-  axios
-    .get("http://localhost:3000/api/readingsdynamic", {
+  api.get("/api/readingsdynamic", {
       params,
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token") || ""}`, // ✅ fallback

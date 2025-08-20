@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { useSocket } from "../hooks/useSocket";
-import axios from "axios";
+import { api } from "../api";
 
 // Types
 type Reading = {
@@ -73,7 +73,7 @@ useSocket((data: Reading) => {
   // ✅ Fetch user-specific gateways with token
   const fetchGatewayIds = async () => {
     try {
-      const res = await axios.get<Gateway[]>("http://localhost:3000/api/gateways", {
+      const res = await api.get<Gateway[]>("/api/gateways", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -106,7 +106,7 @@ useSocket((data: Reading) => {
       if (startDate) params.startDate = startDate;
       if (endDate) params.endDate = endDate;
 
-      const res = await axios.get("http://localhost:3000/api/readingsdynamic", {
+      const res = await api.get("/api/readingsdynamic", {
         params,
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -123,8 +123,8 @@ useSocket((data: Reading) => {
   // ⚙️ Alarm settings
   const fetchAlarmSettings = async () => {
     try {
-      const res = await axios.get<AlarmSetting[]>(
-        "http://localhost:3000/api/alarm-settings",
+      const res = await api.get<AlarmSetting[]>(
+        "/api/alarm-settings",
         {
           params: { gatewayId },
           headers: {
@@ -137,8 +137,8 @@ useSocket((data: Reading) => {
         setAlarmSettings(res.data);
       } else {
         // fallback if not found: auto-generate from data structure
-        const r2 = await axios.get<{ data: Reading[] }>(
-          "http://localhost:3000/api/readingsdynamic",
+        const r2 = await api.get<{ data: Reading[] }>(
+          "/api/readingsdynamic",
           {
             params: { gatewayId, limit: 1, page: 1 },
             headers: {
@@ -173,8 +173,8 @@ useSocket((data: Reading) => {
 
   const saveAlarmSettings = async (settings: AlarmSetting[]) => {
     try {
-      await axios.post(
-        "http://localhost:3000/api/alarm-settings",
+      await api.post(
+        "/api/alarm-settings",
         { gatewayId, settings},
         {
           headers: {

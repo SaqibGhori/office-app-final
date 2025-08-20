@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate }    from 'react-router-dom';
+import { api } from "../api";
+import axios from 'axios';
 
 export default function SuperLoginPage() {
   const [email, setEmail]     = useState('');
@@ -8,19 +10,32 @@ export default function SuperLoginPage() {
   const navigate              = useNavigate();
 
   const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    const res = await fetch('http://localhost:3000/superadmin/auth/login', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ email, password })
-    });
-    const body = await res.json();
-    if (!res.ok) return setError(body.msg || 'Login failed');
+  e.preventDefault();
+  setError(null);
 
-    localStorage.setItem('superToken', body.token);
-    navigate('/superadmin/home');
-  };
+  try {
+    // Axios: URL + data object
+    const { data } = await api.post("/superadmin/auth/login", {
+      email,
+      password,
+    });
+
+    // expect: data.token, data.msg etc.
+    if (!data?.token) {
+      throw new Error(data?.msg || "Login failed");
+    }
+
+    localStorage.setItem("superToken", data.token);
+    navigate("/superadmin/home");
+  } catch (err) {
+    const message = axios.isAxiosError(err)
+      ? err.response?.data?.msg ??
+        err.response?.data?.errors?.[0]?.msg ??
+        err.message
+      : "Login failed";
+    setError(message);
+  }
+};
 
   return (
     <div className="max-w-md mx-auto p-4">

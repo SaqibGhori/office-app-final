@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate }    from 'react-router-dom';
+import axios from 'axios';
+import { api } from '../api';
 
 export default function SuperSignupPage() {
   const [name, setName]       = useState('');
@@ -9,19 +11,21 @@ export default function SuperSignupPage() {
   const navigate              = useNavigate();
 
   const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    const res = await fetch('http://localhost:3000/superadmin/auth/signup', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ name, email, password })
-    });
-    if (!res.ok) {
-      const body = await res.json();
-      return setError(body.msg || 'Signup failed');
-    }
-    navigate('/superadmin/login');
-  };
+  e.preventDefault();
+  setError(null);
+
+  try {
+    await api.post("/superadmin/auth/signup", { name, email, password });
+    navigate("/superadmin/login");
+  } catch (err) {
+    const message = axios.isAxiosError(err)
+      ? err.response?.data?.msg ??
+        err.response?.data?.errors?.[0]?.msg ??
+        err.message
+      : "Signup failed";
+    setError(message);
+  }
+};
 
   return (
     <div className="max-w-md mx-auto p-4">

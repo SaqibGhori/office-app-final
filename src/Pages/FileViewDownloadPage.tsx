@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+// import axios from "axios";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { api } from "../api";
 
 interface ReadingData {
   [category: string]: { [subcategory: string]: number };
@@ -41,7 +42,7 @@ export default function FileExportPage() {
         if (endDate) params.endDate = new Date(endDate).toISOString();
         if (interval) params.interval = interval;
 
-        const res = await axios.get("http://localhost:3000/api/readingsdynamic", {
+        const res = await api.get("/api/readingsdynamic", {
       params,
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token") || ""}`, // ✅ fallback

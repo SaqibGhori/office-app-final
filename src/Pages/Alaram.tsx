@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSocket } from "../hooks/useSocket";
 import { useData } from "../context/DataContext";
-import axios from "axios";
+// import axios from "axios";
+import { api } from "../api"; 
 
 interface AlarmItem {
   _id?: string;
@@ -47,8 +48,7 @@ export default function AlarmPage() {
     if (startDate) params.startDate = new Date(startDate).toISOString();
     if (endDate) params.endDate = new Date(endDate).toISOString();
 
-    axios
-      .get("http://localhost:3000/api/alarm-records", {
+    api.get("/api/alarm-records", {
         params,
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,

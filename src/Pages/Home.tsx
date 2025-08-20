@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import MixChartHome from "../Components/MixChartHome";
-import axios from "axios";
+// import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useSocket } from "../hooks/useSocket";
+import { api } from "../api";
 
 interface GlobalAlarm {
   _id?: string;
@@ -70,7 +71,7 @@ console.log(loading)
   const fetchInitialAlarms = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:3000/api/alarm-records", {
+      const res = await api.get("/api/alarm-records", {
         params: { page: 1, limit: 20 },  // ya jitni limit chahiye
         headers: {
           Authorization: `Bearer ${token}`,
@@ -92,8 +93,8 @@ console.log(loading)
 
   // Fetch Gateways
   useEffect(() => {
-    axios
-      .get<Gateway[]>("http://localhost:3000/api/gateway", {
+    api
+      .get<Gateway[]>("/api/gateway", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -118,8 +119,8 @@ console.log(loading)
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.post(
-        "http://localhost:3000/api/gateway",
+      await api.post(
+        "/api/gateway",
         { gatewayId: gatewayIdInput, name, location },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -140,8 +141,8 @@ console.log(loading)
 
 
   const fetchGateways = () => {
-    axios
-      .get<Gateway[]>("http://localhost:3000/api/gateway", {
+    api
+      .get<Gateway[]>("/api/gateway", {
         headers: {
           Authorization: `Bearer ${token}`,
         },

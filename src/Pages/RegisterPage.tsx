@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import googleloginicon from '../../assets/googleloginicon.png'
 import watticon from '../../assets/watticon.png'
+import axios from 'axios';
+import { api } from "../api"; // path adjust karo
 
 export default function RegisterPage() {
+  // const BASE = import.meta.env.VITE_API_URL || "https://api.wattmatrix.io";
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -24,20 +26,22 @@ export default function RegisterPage() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
     try {
-      const res = await fetch('http://localhost:3000/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password })
+      await api.post("/api/auth/register", {
+        name,
+        email,
+        password,
       });
-      if (!res.ok) {
-        const body = await res.json();
-        throw new Error(body.msg || body.errors?.[0]?.msg || 'Registration failed');
-      }
-      // Success: redirect to login
-      navigate('/login');
-    } catch (err: any) {
-      setError(err.message);
+      // success
+      navigate("/login");
+    } catch (err) {
+      const message = axios.isAxiosError(err)
+        ? err.response?.data?.msg ??
+        err.response?.data?.errors?.[0]?.msg ??
+        err.message
+        : "Registration failed";
+      setError(message);
     }
   };
 
@@ -92,7 +96,7 @@ export default function RegisterPage() {
       </div>
 
       {/* RIGHT: logo side (as-is) */}
-      <div className="w-[50%] h-[100vh] flex justify-center items-center">
+      <div className="w-[50%] h-[90vh] flex justify-center items-center">
         <div>
           <img src={watticon} className="w-48 mx-auto" alt="" />
           <h1 className="text-white font-serif font-bold text-5xl">Watt Matrix</h1>

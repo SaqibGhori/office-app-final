@@ -3,9 +3,11 @@ import { io, Socket } from "socket.io-client";
 
 let sharedSocket: Socket;
 
+const BASE = import.meta.env.VITE_API_URL || "https://api.wattmatrix.io";
+
 export function getSocket(): Socket {
   if (!sharedSocket) {
-    sharedSocket = io("http://localhost:3000", {
+    sharedSocket = io(BASE, {
       transports: ["websocket"],
       path: "/socket.io",
     });

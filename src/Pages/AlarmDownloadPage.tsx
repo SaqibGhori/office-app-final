@@ -1,11 +1,11 @@
 // AlarmDownloadPage.tsx
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
+// import axios from "axios";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import Papa from "papaparse";
-
+import { api } from "../api"; 
 
 
 interface AlarmItem {
@@ -34,8 +34,7 @@ export default function AlarmDownloadPage() {
   useEffect(() => {
     if (!gatewayId) return;
 
-    axios
-      .get("http://localhost:3000/api/alarm-records/export", {
+    api.get("/api/alarm-records/export", {
         params: { gatewayId, startDate, endDate },
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
