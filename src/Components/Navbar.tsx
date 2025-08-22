@@ -24,6 +24,7 @@ const Navbar: React.FC = () => {
           <li><Link to="/aboutus">About Us</Link></li>
           <li><Link to="/contact">Contact Us</Link></li>
           <li><Link to="/privacy">Privacy Policy</Link></li>
+          <li><Link to="/termsandconditions">Privacy Policy</Link></li>
 
           {/* Only show if logged in */}
           {token && (
