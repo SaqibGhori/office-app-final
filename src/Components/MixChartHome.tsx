@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import ReactApexChart from "react-apexcharts";
-import axios from "axios";
 import type { ApexOptions } from "apexcharts";
 import { api } from "../api";
 
@@ -19,7 +18,7 @@ const MixChartHome: React.FC = () => {
               Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
             },
           }),
-          axios.get("/api/alarm-counts", {
+          api.get("/api/alarm-counts", {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
             },

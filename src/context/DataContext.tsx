@@ -72,17 +72,25 @@ useSocket((data: Reading) => {
 
   // ✅ Fetch user-specific gateways with token
   const fetchGatewayIds = async () => {
-    try {
-      const res = await api.get<Gateway[]>("/api/gateways", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-      setGateways(res.data);
-    } catch (err) {
-      console.error("Failed to fetch gateways:", err);
+  try {
+    const raw = localStorage.getItem("token");
+    const token = raw && raw !== "null" && raw !== "undefined" ? raw : null;
+
+    if (!token) {
+      // yahan pe API mat maro; pehle login karao ya token load hone ka wait karo
+      console.warn("No token yet; skipping /api/gateways call");
+      return;
     }
-  };
+
+    const { data } = await api.get<Gateway[]>("/api/gateways", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setGateways(data);
+  } catch (err) {
+    console.error("Failed to fetch gateways:", err);
+  }
+};
+
 
   useEffect(() => {
     fetchGatewayIds();
