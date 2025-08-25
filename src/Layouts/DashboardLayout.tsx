@@ -9,7 +9,7 @@ const DashboardLayout = () => {
   //   logout();
   //   navigate('/login', { replace: true });
   // };
-
+console.log("test")
   return (
     <div className="flex flex-col min-h-screen">
       {/* Top Navbar */}
