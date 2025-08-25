@@ -38,6 +38,7 @@ import SuperSignupPage from './Pages/SuperSignupPage';
 import SuperLoginPage from './Pages/SuperLoginPage';
 import SuperHome from './Pages/SuperHome';
 import Navbar from './Components/Navbar';
+import TermsCondition from './Pages/TermsCondition';
 
 export default function App() {
   return (
@@ -51,6 +52,7 @@ export default function App() {
             <Route path="/" element={<ShowHome />} />
             <Route path="/aboutus" element={<ShowAbout />} />
             <Route path="/contact" element={<ShowContact />} />
+            <Route path="/termsandconditions" element={<TermsCondition/>} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
 
             {/* ───────── Superadmin ───────── */}
