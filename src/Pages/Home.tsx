@@ -238,7 +238,7 @@ const Home = () => {
       console.error(msg, err);
     }
   };
-
+console.log("test")
   const fetchGateways = () => {
     api
       .get<Gateway[]>("/api/gateway", {
