@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../api";
 
@@ -22,6 +22,8 @@ type Purchase = {
   proofImageUrl?: string;
   status: "pending" | "approved" | "rejected";
   createdAt: string;
+  approvedAt?: string;
+  expiresAt?: string;
 };
 
 export default function SuperUsersSettings() {
@@ -33,11 +35,10 @@ export default function SuperUsersSettings() {
 
   // editable copies
   const [role, setRole] = useState<UserDoc["role"]>("user");
-  const [payment, setPayment] = useState(false);
-  const [isActive, setIsActive] = useState(false);
 
-  const [purchases, setPurchases] = useState<Purchase[]>([]);
-  const pending = useMemo(() => purchases.find(p => p.status === "pending"), [purchases]);
+  // purchases
+  const [pending, setPending] = useState<Purchase | null>(null);
+  const [current, setCurrent] = useState<Purchase | null>(null); // last approved
 
   const token = localStorage.getItem("token");
 
@@ -45,19 +46,26 @@ export default function SuperUsersSettings() {
     try {
       setLoading(true);
       setErr(null);
+
       const { data } = await api.get(`/api/admin/users/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUser(data.user);
       setRole(data.user.role);
-      setPayment(!!data.user.payment);
-      setIsActive(!!data.user.isActive);
 
+      // pending (limit 1)
       const p = await api.get(`/api/admin/users/${id}/purchases`, {
-        params: { status: "pending" },
+        params: { status: "pending", limit: 1 },
         headers: { Authorization: `Bearer ${token}` },
       });
-      setPurchases(p.data.purchases || []);
+      setPending(p.data.purchases?.[0] || null);
+
+      // latest approved (limit 1)
+      const a = await api.get(`/api/admin/users/${id}/purchases`, {
+        params: { status: "approved", limit: 1 },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCurrent(a.data.purchases?.[0] || null);
     } catch (e: any) {
       setErr(e?.response?.data?.message || e.message || "Failed to load user");
     } finally {
@@ -67,13 +75,13 @@ export default function SuperUsersSettings() {
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
 
-  const saveBasics = async () => {
+  const saveRole = async () => {
     try {
-      const { data } = await api.patch(`/api/admin/users/${id}`, { role, payment, isActive }, {
+      const { data } = await api.patch(`/api/admin/users/${id}`, { role }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUser(data.user);
-      alert("User updated");
+      alert("Role updated");
     } catch (e: any) {
       alert(e?.response?.data?.message || e.message || "Update failed");
     }
@@ -85,13 +93,18 @@ export default function SuperUsersSettings() {
       await api.patch(`/api/admin/purchases/${pending._id}/approve`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      // refresh
-      await load();
+      await load(); // refresh user + purchases
       alert("Payment approved and user activated.");
     } catch (e: any) {
       alert(e?.response?.data?.message || e.message || "Approval failed");
     }
   };
+
+  const daysLeft = useMemo(() => {
+    if (!current?.expiresAt) return null;
+    const ms = new Date(current.expiresAt).getTime() - Date.now();
+    return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
+  }, [current?.expiresAt]);
 
   if (loading) return <div className="p-8">Loading…</div>;
   if (err) return <div className="p-8 text-red-600">{err}</div>;
@@ -104,8 +117,8 @@ export default function SuperUsersSettings() {
         <h1 className="text-2xl font-bold">User Settings</h1>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Left: Basic info */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        {/* Left: Basic info (role only) */}
         <div className="bg-white rounded-xl shadow p-5 space-y-4">
           <div>
             <div className="text-sm text-gray-500">Name</div>
@@ -125,18 +138,10 @@ export default function SuperUsersSettings() {
                 <option value="superadmin">superadmin</option>
               </select>
             </div>
-            <div className="flex items-center gap-2 mt-6">
-              <input id="payment" type="checkbox" checked={payment} onChange={e => setPayment(e.target.checked)} />
-              <label htmlFor="payment">Payment Approved</label>
-            </div>
-            <div className="flex items-center gap-2">
-              <input id="active" type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} />
-              <label htmlFor="active">Active User</label>
-            </div>
           </div>
 
-          <button onClick={saveBasics} className="bg-primary text-white px-4 py-2 rounded-lg">
-            Save Changes
+          <button onClick={saveRole} className="bg-primary text-white px-4 py-2 rounded-lg">
+            Save Role
           </button>
 
           <div className="text-xs text-gray-500">
@@ -147,17 +152,17 @@ export default function SuperUsersSettings() {
         {/* Right: Pending Payment Proof */}
         <div className="bg-white rounded-xl shadow p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Payment Proof</h2>
+            <h2 className="text-lg font-semibold">Pending Payment Proof</h2>
             {pending ? (
               <span className="text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-700">Pending</span>
             ) : (
-              <span className="text-xs px-2 py-1 rounded bg-green-100 text-green-700">No pending</span>
+              <span className="text-xs px-2 py-1 rounded bg-green-100 text-green-700">None</span>
             )}
           </div>
 
           {pending ? (
             <>
-              {pending?.proofImageUrl ? (
+              {pending.proofImageUrl ? (
                 <a href={pending.proofImageUrl} target="_blank" rel="noreferrer" className="block">
                   <img
                     src={pending.proofImageUrl}
@@ -183,13 +188,51 @@ export default function SuperUsersSettings() {
                 <button onClick={approvePending} className="bg-green-600 text-white px-4 py-2 rounded-lg">
                   Approve & Activate
                 </button>
-                {/* (optional) Reject button:
-                <button className="bg-red-600 text-white px-4 py-2 rounded-lg">Reject</button>
-                */}
               </div>
             </>
           ) : (
             <div className="text-sm text-gray-500">No pending purchases for this user.</div>
+          )}
+        </div>
+
+        {/* Full width: Current Approved Plan (proof + expiry) */}
+        <div className="lg:col-span-2 bg-white rounded-xl shadow p-5 space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Current Plan</h2>
+            {current ? (
+              <span className="text-xs px-2 py-1 rounded bg-green-100 text-green-700">Active</span>
+            ) : (
+              <span className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">No active plan</span>
+            )}
+          </div>
+
+          {!current ? (
+            <div className="text-sm text-gray-500">User has no approved plan yet.</div>
+          ) : (
+            <>
+              <div className="grid md:grid-cols-3 gap-3 text-sm">
+                <div><b>Plan:</b> {current.planName}</div>
+                <div><b>Price:</b> {current.price} RS</div>
+                <div><b>Duration:</b> {current.duration}</div>
+                <div><b>Devices:</b> {current.devices}</div>
+                <div><b>Approved:</b> {current.approvedAt ? new Date(current.approvedAt).toLocaleString() : '-'}</div>
+                <div><b>Expires:</b> {current.expiresAt ? new Date(current.expiresAt).toLocaleString() : '-'}</div>
+                <div><b>Time left:</b> {current.expiresAt ? `${daysLeft} day(s)` : '-'}</div>
+              </div>
+
+              {current.proofImageUrl && (
+                <div className="mt-3">
+                  <div className="text-sm font-medium mb-1">Proof (kept for records)</div>
+                  <a href={current.proofImageUrl} target="_blank" rel="noreferrer" className="inline-block">
+                    <img
+                      src={current.proofImageUrl}
+                      alt="Approved Proof"
+                      className="max-h-64 border rounded object-contain"
+                    />
+                  </a>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
