@@ -141,6 +141,8 @@ const handleContinue = async () => {
       headers: { Authorization: `Bearer ${token}` },
     });
 
+     console.log(data)
+
     alert("Plan submitted for approval. We’ll review your payment proof.");
     setIsModalOpen(false);
     setProofFile(null);

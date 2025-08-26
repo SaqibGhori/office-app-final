@@ -56,7 +56,7 @@ export function useSocket(
       onReading?.(data);
     };
 
-    const handleSubscribedAck = (info: any) => {
+    const handleSubscribedAck = () => {
       // optional: debug/telemetry
       // console.log("subscribed:", info);
     };
