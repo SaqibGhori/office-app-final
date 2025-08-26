@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import MixChartHome from "../Components/MixChartHome";
-// import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useSocket } from "../hooks/useSocket";
 import { api } from "../api";
+import { ToastContainer, toast } from "react-toastify";
+// (global css import ideally app root me ho)
+// import "react-toastify/dist/ReactToastify.css";
 
 interface GlobalAlarm {
   _id?: string;
@@ -14,12 +16,33 @@ interface GlobalAlarm {
   value: number;
   priority: "High" | "Normal" | "Low";
 }
-
 interface Gateway {
   _id: string;
   gatewayId: string;
   name: string;
   location: string;
+}
+interface MeUser {
+  name: string;
+  email: string;
+  role: "user" | "admin" | "superadmin";
+  payment?: boolean;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+type PurchaseState = "none" | "pending" | "rejected" | "approved";
+interface PurchaseLite {
+  _id: string;
+  planName: string;
+  price: number;
+  duration: string;
+  devices: number; // <- plan device limit
+  status: "pending" | "approved" | "rejected";
+  proofImageUrl?: string;
+  createdAt: string;
+  approvedAt?: string;
+  expiresAt?: string;
 }
 
 const Home = () => {
@@ -28,84 +51,149 @@ const Home = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
+  const [purchaseState, setPurchaseState] = useState<PurchaseState>("none");
+  const [latestPurchase, setLatestPurchase] = useState<PurchaseLite | null>(null);
+
+  // User meta
+  const [me, setMe] = useState<MeUser | null>(null);
+  const [metaLoading, setMetaLoading] = useState(true);
+
+  // Active (approved) plan (for limit)
+  const [activePlan, setActivePlan] = useState<PurchaseLite | null>(null);
+  const [planLimit, setPlanLimit] = useState<number | null>(null);
+
+  const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-console.log(loading)
+  // -------------------- META LOAD (me + latest purchase any status) --------------------
+  useEffect(() => {
+    if (!token) return;
+    (async () => {
+      setMetaLoading(true);
+      try {
+        const meRes = await api.get("/api/me", { headers: { Authorization: `Bearer ${token}` } });
+        const u: MeUser = meRes.data.user;
+        setMe(u);
 
-  // Socket Subscription with Token
-  const socket = useSocket(undefined, undefined, token || undefined);
+        if (u.role === "user" && !u.payment) {
+          // unpaid: show latest request state
+          const pRes = await api.get("/api/purchases/mine", { params: { limit: 1, sort: "createdAt:desc" }, headers: { Authorization: `Bearer ${token}` } });
+          const items: PurchaseLite[] = pRes.data.items || [];
+          const latest = items[0] || null;
+          setLatestPurchase(latest);
+          if (!latest) setPurchaseState("none");
+          else if (latest.status === "pending") setPurchaseState("pending");
+          else if (latest.status === "rejected") setPurchaseState("rejected");
+          else setPurchaseState("approved");
+        } else {
+          setPurchaseState("approved"); // paid or admin/superadmin
+          setLatestPurchase(null);
+        }
+      } catch (err) {
+        console.error("❌ Error loading /api/me or /api/purchases/mine:", err);
+      } finally {
+        setMetaLoading(false);
+      }
+    })();
+  }, [token]);
 
-  // Listen to global-alarms
- useEffect(() => {
-  if (!token || !socket) return;
+  // “Gated” if: normal user & unpaid
+  const gated = useMemo(
+    () => !!me && me.role === "user" && !me.payment,
+    [me]
+  );
 
-  const handler = (newAlarms: GlobalAlarm[]) => {
-    setAlarms((prev) => {
-      const merged = [...newAlarms, ...prev];
-      const unique = merged.filter(
-        (alarm, index, self) =>
-          index ===
-          self.findIndex(
-            (a) =>
-              a.gatewayId === alarm.gatewayId &&
-              a.timestamp === alarm.timestamp &&
-              a.category === alarm.category &&
-              a.subcategory === alarm.subcategory
-          )
-      );
-      unique.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-      return unique.slice(0, 20);  // latest 20 alarms only
-    });
-  };
+  // -------------------- Fetch Active Plan (only when not gated) --------------------
+  useEffect(() => {
+    if (!token || metaLoading || gated) return;
+    (async () => {
+      try {
+        // latest approved purchase (has devices limit)
+        const res = await api.get("/api/purchases/mine", {
+          params: { status: "approved", limit: 1, sort: "approvedAt:desc" },
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const item: PurchaseLite | undefined = res.data.items?.[0];
+        setActivePlan(item || null);
+        setPlanLimit(item?.devices ?? null);
+      } catch (e) {
+        console.error("❌ Error loading active plan:", e);
+      }
+    })();
+  }, [token, metaLoading, gated]);
 
-  socket.on("global-alarms", handler);
-
-  return () => {
-    socket.off("global-alarms", handler);
-  };
-}, [socket, token]);
+  // -------------------- SOCKET (only when not gated) --------------------
+  const tokenForSocket =
+    !metaLoading && !gated ? (token || undefined) : undefined;
+  const socket = useSocket(undefined, undefined, tokenForSocket);
 
   useEffect(() => {
-  const fetchInitialAlarms = async () => {
-    setLoading(true);
-    try {
-      const res = await api.get("/api/alarm-records", {
-        params: { page: 1, limit: 20 },  // ya jitni limit chahiye
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+    if (!tokenForSocket || !socket) return;
+
+    const handler = (newAlarms: GlobalAlarm[]) => {
+      setAlarms((prev) => {
+        const merged = [...newAlarms, ...prev];
+        const unique = merged.filter(
+          (alarm, index, self) =>
+            index ===
+            self.findIndex(
+              (a) =>
+                a.gatewayId === alarm.gatewayId &&
+                a.timestamp === alarm.timestamp &&
+                a.category === alarm.category &&
+                a.subcategory === alarm.subcategory
+            )
+        );
+        unique.sort(
+          (a, b) =>
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+        );
+        return unique.slice(0, 20);
       });
-      setAlarms(res.data.data);  // Initial DB alarms
-      setTotalPages(res.data.totalPages || 1);
-    } catch (err) {
-      console.error("❌ Error fetching alarms:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  if (token) {
-    fetchInitialAlarms();
-  }
-}, [token]);
+    socket.on("global-alarms", handler);
+    return () => {
+      socket.off("global-alarms", handler);
+    };
+  }, [socket, tokenForSocket]);
 
-  // Fetch Gateways
+  // -------------------- Initial Alarms (only when not gated) --------------------
   useEffect(() => {
+    if (!token || metaLoading || gated) return;
+    const fetchInitialAlarms = async () => {
+      setLoading(true);
+      try {
+        const res = await api.get("/api/alarm-records", {
+          params: { page: 1, limit: 20 },
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setAlarms(res.data.data);
+        setTotalPages(res.data.totalPages || 1);
+      } catch (err) {
+        console.error("❌ Error fetching alarms:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchInitialAlarms();
+  }, [token, metaLoading, gated]);
+
+  // -------------------- Gateways (only when not gated) --------------------
+  useEffect(() => {
+    if (!token || metaLoading || gated) return;
     api
       .get<Gateway[]>("/api/gateway", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => setGateways(res.data))
       .catch(console.error);
-  }, [token]);
+  }, [token, metaLoading, gated]);
 
-  // Modal State
+  // -------------------- Add Gateway Modal --------------------
   const [showModal, setShowModal] = useState(false);
-  const [ gatewayIdInput, setGatewayIdInput] = useState("");
+  const [gatewayIdInput, setGatewayIdInput] = useState("");
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [success, setSuccess] = useState(false);
@@ -113,11 +201,21 @@ console.log(loading)
   useEffect(() => {
     if (showModal) {
       setGatewayIdInput("gw-" + Math.floor(Math.random() * 100000));
-    } 
+    }
   }, [showModal]);
+
+  const used = gateways.length;
+  const remaining = planLimit == null ? null : Math.max(planLimit - used, 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Frontend guard: if user & has a planLimit
+    if (me?.role === "user" && planLimit != null && used >= planLimit) {
+      toast.error(`Device limit exceeded (${used}/${planLimit}). Upgrade plan to add more.`);
+      return;
+    }
+
     try {
       await api.post(
         "/api/gateway",
@@ -131,21 +229,20 @@ console.log(loading)
         setName("");
         setLocation("");
         setSuccess(false);
-        console.log(gatewayIdInput , "moiz")
       }, 1500);
-    } catch (err) {
-      console.error("❌ Error creating gateway:", err);
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        "❌ Error creating gateway";
+      toast.error(msg);
+      console.error(msg, err);
     }
   };
-
-
 
   const fetchGateways = () => {
     api
       .get<Gateway[]>("/api/gateway", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => setGateways(res.data))
       .catch(console.error);
@@ -158,16 +255,122 @@ console.log(loading)
   };
 
   if (!token) return <div className="p-6 text-lg">⏳ Loading user info...</div>;
+  if (metaLoading) return <div className="p-6 text-lg">Loading dashboard…</div>;
 
+  // -------------------- GATED VIEW (payment pending / unpaid) --------------------
+  if (!!me && me.role === "user" && !me.payment) {
+    return (
+      <div className="max-w-2xl mx-auto p-8">
+        {/* NONE */}
+        {purchaseState === "none" && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+            <h2 className="text-2xl font-bold text-blue-800 mb-2">
+              No Payment Request Found
+            </h2>
+            <p className="text-blue-800 mb-4">
+              Aapne abhi tak koi plan request submit nahi ki. Kripya plan select karke
+              payment proof upload karein.
+            </p>
+            <button
+              onClick={() => navigate("/pricing")}
+              className="bg-primary text-white px-4 py-2 rounded-lg"
+            >
+              Choose a Plan
+            </button>
+            <p className="text-xs text-blue-700 mt-4">
+              Approval ke baad dashboard features auto-enable ho jayenge.
+            </p>
+          </div>
+        )}
+
+        {/* PENDING */}
+        {purchaseState === "pending" && latestPurchase && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
+            <h2 className="text-2xl font-bold text-yellow-800 mb-2">
+              Payment Verification Pending
+            </h2>
+            <p className="text-yellow-800 mb-3">
+              Aapki plan request review me hai. Approval tak dashboard features temporarily band rahenge.
+            </p>
+            <ul className="text-sm text-yellow-800 space-y-1 mb-4">
+              <li><b>Plan:</b> {latestPurchase.planName}</li>
+              <li><b>Price:</b> {latestPurchase.price} RS</li>
+              <li><b>Duration:</b> {latestPurchase.duration}</li>
+              <li><b>Submitted:</b> {new Date(latestPurchase.createdAt).toLocaleString()}</li>
+            </ul>
+            {latestPurchase.proofImageUrl && (
+              <a
+                href={latestPurchase.proofImageUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-block text-blue-700 underline mb-2"
+              >
+                View uploaded proof
+              </a>
+            )}
+            <div className="text-xs text-yellow-700">
+              Note: Jaise hi Superadmin approve karega, features yahan visible ho jayenge.
+            </div>
+          </div>
+        )}
+
+        {/* REJECTED */}
+        {purchaseState === "rejected" && latestPurchase && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+            <h2 className="text-2xl font-bold text-red-800 mb-2">
+              Payment Request Rejected
+            </h2>
+            <p className="text-red-800 mb-3">
+              Aapki last request reject ho gayi. Kripya details verify karke dobara submit karein.
+            </p>
+            <ul className="text-sm text-red-800 space-y-1 mb-4">
+              <li><b>Plan:</b> {latestPurchase.planName}</li>
+              <li><b>Price:</b> {latestPurchase.price} RS</li>
+              <li><b>Duration:</b> {latestPurchase.duration}</li>
+              <li><b>Submitted:</b> {new Date(latestPurchase.createdAt).toLocaleString()}</li>
+            </ul>
+            <button
+              onClick={() => navigate("/pricing")}
+              className="bg-primary text-white px-4 py-2 rounded-lg"
+            >
+              Submit New Request
+            </button>
+          </div>
+        )}
+        <ToastContainer position="top-right" />
+      </div>
+    );
+  }
+
+  // -------------------- NORMAL DASHBOARD (paid or admin/superadmin) --------------------
   return (
     <div className="mx-auto flex bg-secondary">
       {/* RIGHT Sidebar */}
-      <div className="w-[20%] pb-5  text-center">
+      <div className="w-[20%] pb-5 text-center">
         <h2 className="text-2xl font-bold mt-4">Gateways</h2>
 
+        {/* Usage chips */}
+        <div className="flex flex-col items-center gap-1 text-sm my-2">
+          <div className="px-2 py-1 rounded bg-white shadow">
+            <b>Used:</b> {used}
+          </div>
+          <div className="px-2 py-1 rounded bg-white shadow">
+            <b>Limit:</b> {planLimit ?? "-"}
+          </div>
+          <div className="px-2 py-1 rounded bg-white shadow">
+            <b>Remaining:</b> {remaining ?? "-"}
+          </div>
+        </div>
+
         <button
-          className="py-2 px-6 bg-primary text-white rounded hover:bg-blue-950 my-3"
+          className="py-2 px-6 bg-primary text-white rounded hover:bg-blue-950 my-3 disabled:opacity-60"
           onClick={() => setShowModal(true)}
+          disabled={me?.role === "user" && planLimit != null && remaining === 0}
+          title={
+            me?.role === "user" && planLimit != null && remaining === 0
+              ? "Device limit reached"
+              : "Add a new device"
+          }
         >
           ➕ Add Device
         </button>
@@ -179,11 +382,10 @@ console.log(loading)
             className="py-3 px-6 mx-auto border w-40 rounded-lg bg-gray-800 text-white hover:bg-gray-600 my-2 block text-left"
           >
             <div className="font-bold">{gateway.name}</div>
-            {/* <div className="text-sm">{gateway.location}</div>
-            <div className="text-xs opacity-60">ID: {gateway.gatewayId}</div> */}
           </button>
         ))}
       </div>
+
       {/* LEFT Side */}
       <div className="w-[80%]">
         <div className="bg-white mb-4">
@@ -218,7 +420,9 @@ console.log(loading)
                     }
                   >
                     <td className="px-3 py-2 font-semibold">{alarm.gatewayId}</td>
-                    <td className="px-3 py-2">{new Date(alarm.timestamp).toLocaleTimeString()}</td>
+                    <td className="px-3 py-2">
+                      {new Date(alarm.timestamp).toLocaleTimeString()}
+                    </td>
                     <td className="px-3 py-2">{alarm.category}</td>
                     <td className="px-3 py-2">{alarm.subcategory}</td>
                     <td className="px-3 py-2">{alarm.value}</td>
@@ -258,8 +462,6 @@ console.log(loading)
           </div>
         </div>
       </div>
-
-      
 
       {/* Modal */}
       {showModal && (
@@ -322,6 +524,8 @@ console.log(loading)
           </div>
         </div>
       )}
+
+      <ToastContainer position="top-right" />
     </div>
   );
 };
