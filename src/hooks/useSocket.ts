@@ -1,25 +1,32 @@
+// hooks/useSocket.ts
 import { useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 
-let sharedSocket: Socket;
+let sharedSocket: Socket | null = null;
 
 const BASE = import.meta.env.VITE_API_URL || "https://api.wattmatrix.io";
 
 export function getSocket(): Socket {
   if (!sharedSocket) {
     sharedSocket = io(BASE, {
-      transports: ["websocket"],
+      transports: ["websocket"],   // low-latency
       path: "/socket.io",
+      withCredentials: true,
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 500,
+      reconnectionDelayMax: 3000,
+      timeout: 10000,
     });
   }
-  return sharedSocket;
+  return sharedSocket!;
 }
 
 /**
  * Custom React Hook to manage socket
  * @param onReading  Callback jab naya reading aaye
  * @param gatewayId  Aapka IoT device / gateway ID
- * @param token      JWT Token for authentication & global-alarms
+ * @param token      JWT Token (optional) -> user room + alarms
  */
 export function useSocket(
   onReading?: (data: any) => void,
@@ -27,30 +34,51 @@ export function useSocket(
   token?: string
 ): Socket {
   const socket = useRef<Socket>(getSocket()).current;
+  const lastSubsRef = useRef<{ gatewayId?: string; token?: string }>({});
 
   useEffect(() => {
-    // console.log("🧠 useSocket subscribing:", { gatewayId, token });
+    // subscribe function (reusable for connect/reconnect & prop changes)
+    const doSubscribe = () => {
+      // avoid redundant emits if nothing changed
+      if (
+        lastSubsRef.current.gatewayId === gatewayId &&
+        lastSubsRef.current.token === token
+      ) return;
 
-    if (!token) {
-      // console.warn("⚠️ useSocket: token missing. Will wait...");
-      return;
-    }
-
-    // Subscribe with token for user-based room and gatewayId if provided
-    socket.emit("subscribe", { gatewayId, token });
-
-    const readingHandler = (data: any) => {
-      if (onReading && gatewayId && data.gatewayId === gatewayId) {
-        onReading(data);
-      }
+      socket.emit("subscribe", { gatewayId, token }); // token optional
+      lastSubsRef.current = { gatewayId, token };
     };
 
-    socket.on("new-reading", readingHandler);
+    // attach reading handler (standardized event name = 'reading')
+    const handleReading = (data: any) => {
+      // if consumer wants only current gateway, filter here:
+      if (gatewayId && data?.gatewayId !== gatewayId) return;
+      onReading?.(data);
+    };
+
+    const handleSubscribedAck = (info: any) => {
+      // optional: debug/telemetry
+      // console.log("subscribed:", info);
+    };
+
+    // initial attach
+    socket.on("reading", handleReading);
+    socket.on("subscribed", handleSubscribedAck);
+
+    // re-subscribe on connect/reconnect
+    const onConnect = () => doSubscribe();
+    socket.on("connect", onConnect);
+
+    // also (re)subscribe immediately when deps change
+    doSubscribe();
 
     return () => {
-      socket.off("new-reading", readingHandler);
+      socket.off("reading", handleReading);
+      socket.off("subscribed", handleSubscribedAck);
+      socket.off("connect", onConnect);
+      // NOTE: socket ko close mat karo (shared rehne do)
     };
-  }, [onReading, gatewayId, token]);  // Dependencies are OK
+  }, [socket, onReading, gatewayId, token]);
 
   return socket;
 }

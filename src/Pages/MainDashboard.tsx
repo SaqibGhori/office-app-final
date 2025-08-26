@@ -28,6 +28,7 @@ export default function MainDashboard() {
     gatewayId,
     userId
   );
+console.log(reading , "mk")
 
   const selectedGateway = gateways?.find((g) => g.gatewayId === gatewayId);
   const gatewayName = selectedGateway?.name || "Unknown";

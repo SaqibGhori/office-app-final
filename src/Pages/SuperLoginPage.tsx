@@ -25,7 +25,7 @@ export default function SuperLoginPage() {
       throw new Error(data?.msg || "Login failed");
     }
 
-    localStorage.setItem("superToken", data.token);
+    localStorage.setItem("token", data.token);
     navigate("/superadmin/home");
   } catch (err) {
     const message = axios.isAxiosError(err)
