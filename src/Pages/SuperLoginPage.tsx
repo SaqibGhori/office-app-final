@@ -7,11 +7,12 @@ export default function SuperLoginPage() {
   const [email, setEmail]     = useState('');
   const [password, setPass]   = useState('');
   const [error, setError]     = useState<string|null>(null);
-  const navigate              = useNavigate();
-
+  const navigate = useNavigate();
+console.log('hello')
   const onSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   setError(null);
+ 
 
   try {
     // Axios: URL + data object
