@@ -19,6 +19,7 @@ import ShowHome from './Pages/ShowHome';
 import ShowAbout from './Pages/ShowAbout';
 import ShowContact from './Pages/ShowContact';
 import PrivacyPolicy from './Pages/PrivacyPolicy';
+import TermsCondition from './Pages/TermsCondition';
 import LoginPage from './Pages/LoginPage';
 import RegisterPage from './Pages/RegisterPage';
 
@@ -38,7 +39,7 @@ import SuperSignupPage from './Pages/SuperSignupPage';
 import SuperLoginPage from './Pages/SuperLoginPage';
 import SuperHome from './Pages/SuperHome';
 import Navbar from './Components/Navbar';
-import TermsCondition from './Pages/TermsCondition';
+import SuperUsersSettings from './Pages/SuperUsersSettings'
 
 export default function App() {
   return (
@@ -60,6 +61,7 @@ export default function App() {
             <Route path="/superadmin/login" element={<SuperLoginPage />} />
             <Route element={<SuperProtectedRoute />}>
               <Route path="/superadmin/home" element={<SuperHome />} />
+               <Route path="/super/users/:id" element={<SuperUsersSettings />} />
             </Route>
 
             {/* ───────── Auth Pages ───────── */}

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { api } from "../api";
 
 interface FormDataType {
   device: number | null;
@@ -11,7 +12,7 @@ interface FormDataType {
 }
 
 export default function PricingCards() {
- const [formData, setFormData] = useState<FormDataType>({
+  const [formData, setFormData] = useState<FormDataType>({
     device: null,
     durationValue: null,
     planDuration: "Months",
@@ -23,62 +24,64 @@ export default function PricingCards() {
 
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [proofFile, setProofFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+console.log(proofFile , "proof file")
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const basePerDevice = 500;
+    const { name, value } = e.target;
+    const numValue = name === "planDuration" ? value : Number(value);
 
- const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const basePerDevice = 500;
-  const { name, value } = e.target;
-  const numValue = name === "planDuration" ? value : Number(value);
+    if (
+      name === "durationValue" &&
+      formData.planDuration === "Months" &&
+      typeof numValue === "number" &&
+      numValue > 12
+    ) {
+      return;
+    }
 
-  if (
-    name === "durationValue" &&
-    formData.planDuration === "Months" &&
-    typeof numValue === "number" &&
-    numValue > 12
-  ) {
-    return;
-  }
+    const updatedForm = {
+      ...formData,
+      [name]: numValue,
+    };
 
-  const updatedForm = {
-    ...formData,
-    [name]: numValue,
+    if (updatedForm.device == null || updatedForm.durationValue == null) {
+      setFormData(updatedForm);
+      return;
+    }
+
+    // Total months calculation
+    let totalMonths = updatedForm.planDuration === "Months"
+      ? updatedForm.durationValue
+      : updatedForm.durationValue * 12;
+
+    // Base price (without discount)
+    const basePrice = updatedForm.device * (totalMonths * basePerDevice);
+
+    // Discounts
+    let devicesDiscount = Math.min(Math.floor(updatedForm.device / 10) * 0.03, 0.12);
+
+    let durationDiscount = 0;
+    if (updatedForm.planDuration === "Months") {
+      durationDiscount = Math.min(Math.floor(updatedForm.durationValue / 3) * 0.03, 0.12);
+    } else if (updatedForm.planDuration === "Years") {
+      durationDiscount = 0.12;
+    }
+
+    const totalDiscountPercent = devicesDiscount + durationDiscount;
+    const discountAmount = basePrice * totalDiscountPercent;
+    const finalPrice = basePrice - discountAmount;
+
+    // Update state
+    setFormData({
+      ...updatedForm,
+      price: finalPrice,
+      basePrice: basePrice,
+      discountAmount: discountAmount,
+      discountPercent: +(totalDiscountPercent * 100).toFixed(2)
+    });
   };
-
-  if (updatedForm.device == null || updatedForm.durationValue == null) {
-    setFormData(updatedForm);
-    return;
-  }
-
-  // Total months calculation
-  let totalMonths = updatedForm.planDuration === "Months"
-    ? updatedForm.durationValue
-    : updatedForm.durationValue * 12;
-
-  // Base price (without discount)
-  const basePrice = updatedForm.device * (totalMonths * basePerDevice);
-
-  // Discounts
-  let devicesDiscount = Math.min(Math.floor(updatedForm.device / 10) * 0.03, 0.12);
-
-  let durationDiscount = 0;
-  if (updatedForm.planDuration === "Months") {
-    durationDiscount = Math.min(Math.floor(updatedForm.durationValue / 3) * 0.03, 0.12);
-  } else if (updatedForm.planDuration === "Years") {
-    durationDiscount = 0.12;
-  }
-
-  const totalDiscountPercent = devicesDiscount + durationDiscount;
-  const discountAmount = basePrice * totalDiscountPercent;
-  const finalPrice = basePrice - discountAmount;
-
-  // Update state
-  setFormData({
-    ...updatedForm,
-    price: finalPrice,
-    basePrice: basePrice,
-    discountAmount: discountAmount,
-    discountPercent: +(totalDiscountPercent * 100).toFixed(2)
-  });
-};
 
 
 
@@ -107,6 +110,51 @@ export default function PricingCards() {
   const yearlyDiscountPercent = 0.15 + 0.03; // 15% yearly + 3% device discount
   const yearlyDiscountAmount = yearlyBasePrice * yearlyDiscountPercent; // kitne Rs ka discount mila
   const yearlyFinalPrice = yearlyBasePrice - yearlyDiscountAmount; // final price after discount
+
+const handleContinue = async () => {
+  if (!selectedPlan) return alert("No plan selected");
+  if (!proofFile) return alert("Please upload payment proof image");
+
+  try {
+    setSubmitting(true);
+    const token = localStorage.getItem("token");
+    if (!token) return alert("You are not logged in");
+
+    const fd = new FormData();
+    fd.append("planName", selectedPlan.name);
+    fd.append("price", String(selectedPlan.price ?? 0));
+    fd.append("duration", String(selectedPlan.duration ?? ""));
+    if (selectedPlan.devices !== undefined) fd.append("devices", String(selectedPlan.devices));
+    if (selectedPlan.basePrice !== undefined) fd.append("basePrice", String(selectedPlan.basePrice));
+    if (selectedPlan.discountAmount !== undefined) fd.append("discountAmount", String(selectedPlan.discountAmount));
+    if (selectedPlan.discountPercent !== undefined) fd.append("discountPercent", String(selectedPlan.discountPercent));
+    fd.append("proof", proofFile);
+
+    // ❗FormData ko aise inspect karo (console.log(fd) hamesha khaali dikhta hai)
+    for (const [k, v] of fd.entries()) {
+      if (v instanceof File) console.log(k, `File(${v.name}, ${v.type}, ${v.size}B)`);
+      else console.log(k, v);
+    }
+
+    // ✅ axios v1 helper: postForm (multipart headers auto set)
+    const { data } = await api.postForm("/api/purchases", fd, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    alert("Plan submitted for approval. We’ll review your payment proof.");
+    setIsModalOpen(false);
+    setProofFile(null);
+  } catch (err: any) {
+    console.error(err);
+    alert(err?.response?.data?.message || err.message || "Failed to save purchase");
+  } finally {
+    setSubmitting(false);
+  }
+};
+
+
+
+
 
   return (
     <>
@@ -241,6 +289,21 @@ export default function PricingCards() {
               {selectedPlan?.discountAmount !== undefined && <p><strong>Saved:</strong> {selectedPlan.discountAmount} RS</p>}
               {selectedPlan?.discountPercent !== undefined && <p><strong>Discount:</strong> {selectedPlan.discountPercent}%</p>}
 
+              <div className="mt-4">
+                <label className="block text-sm font-medium mb-2">Upload Payment Proof (image)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setProofFile(e.target.files?.[0] || null)}
+                  className="w-full border rounded p-2"
+                />
+                {proofFile && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {proofFile.name} — {(proofFile.size / 1024).toFixed(0)} KB
+                  </p>
+                )}
+              </div>
+
               <div className="mt-6 flex justify-end gap-4">
                 <button
                   onClick={() => setIsModalOpen(false)}
@@ -248,11 +311,18 @@ export default function PricingCards() {
                 >
                   Close
                 </button>
-                <button
+                {/* <button
                   onClick={() => alert("Next step logic yahan ayega")}
                   className="px-4 py-2 bg-primary text-white rounded-lg"
                 >
                   Continue
+                </button> */}
+                <button
+                  onClick={handleContinue}
+                  disabled={submitting}
+                  className="px-4 py-2 bg-primary text-white rounded-lg disabled:opacity-60"
+                >
+                  {submitting ? "Saving..." : "Continue"}
                 </button>
               </div>
             </div>
