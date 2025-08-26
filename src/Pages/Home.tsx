@@ -55,6 +55,8 @@ const Home = () => {
   const [purchaseState, setPurchaseState] = useState<PurchaseState>("none");
   const [latestPurchase, setLatestPurchase] = useState<PurchaseLite | null>(null);
 
+console.log(loading)
+
   // User meta
   const [me, setMe] = useState<MeUser | null>(null);
   const [metaLoading, setMetaLoading] = useState(true);
@@ -62,6 +64,8 @@ const Home = () => {
   // Active (approved) plan (for limit)
   const [activePlan, setActivePlan] = useState<PurchaseLite | null>(null);
   const [planLimit, setPlanLimit] = useState<number | null>(null);
+
+console.log(activePlan)
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
