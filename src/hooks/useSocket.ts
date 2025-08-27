@@ -9,7 +9,7 @@ const BASE = import.meta.env.VITE_API_URL || "https://api.wattmatrix.io";
 export function getSocket(): Socket {
   if (!sharedSocket) {
     sharedSocket = io(BASE, {
-      transports: ["websocket"],   // low-latency
+      transports: ["websocket","polling"],   // low-latency
       path: "/socket.io",
       withCredentials: true,
       reconnection: true,
