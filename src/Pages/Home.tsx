@@ -55,7 +55,7 @@ const Home = () => {
   const [purchaseState, setPurchaseState] = useState<PurchaseState>("none");
   const [latestPurchase, setLatestPurchase] = useState<PurchaseLite | null>(null);
 
-console.log(loading)
+  console.log(loading)
 
   // User meta
   const [me, setMe] = useState<MeUser | null>(null);
@@ -65,7 +65,7 @@ console.log(loading)
   const [activePlan, setActivePlan] = useState<PurchaseLite | null>(null);
   const [planLimit, setPlanLimit] = useState<number | null>(null);
 
-console.log(activePlan)
+  console.log(activePlan)
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
@@ -242,7 +242,7 @@ console.log(activePlan)
       console.error(msg, err);
     }
   };
-console.log("test")
+  console.log("test")
   const fetchGateways = () => {
     api
       .get<Gateway[]>("/api/gateway", {
@@ -272,8 +272,10 @@ console.log("test")
               No Payment Request Found
             </h2>
             <p className="text-blue-800 mb-4">
-              Aapne abhi tak koi plan request submit nahi ki. Kripya plan select karke
-              payment proof upload karein.
+              <p className="text-blue-800 mb-4">
+                No plan request has been submitted yet. Please select a plan and upload your payment proof to continue.
+              </p>
+
             </p>
             <button
               onClick={() => navigate("/pricing")}
@@ -282,7 +284,7 @@ console.log("test")
               Choose a Plan
             </button>
             <p className="text-xs text-blue-700 mt-4">
-              Approval ke baad dashboard features auto-enable ho jayenge.
+              Once approved, the dashboard features will be enabled automatically.
             </p>
           </div>
         )}
@@ -294,7 +296,7 @@ console.log("test")
               Payment Verification Pending
             </h2>
             <p className="text-yellow-800 mb-3">
-              Aapki plan request review me hai. Approval tak dashboard features temporarily band rahenge.
+              Your plan request is currently under review. Dashboard features will remain temporarily disabled until approval.
             </p>
             <ul className="text-sm text-yellow-800 space-y-1 mb-4">
               <li><b>Plan:</b> {latestPurchase.planName}</li>
@@ -313,7 +315,7 @@ console.log("test")
               </a>
             )}
             <div className="text-xs text-yellow-700">
-              Note: Jaise hi Superadmin approve karega, features yahan visible ho jayenge.
+              Note: Once our team approves your payment request, the features will appear here.
             </div>
           </div>
         )}
@@ -325,7 +327,7 @@ console.log("test")
               Payment Request Rejected
             </h2>
             <p className="text-red-800 mb-3">
-              Aapki last request reject ho gayi. Kripya details verify karke dobara submit karein.
+               Your previous request was rejected. Please review the details and resubmit.
             </p>
             <ul className="text-sm text-red-800 space-y-1 mb-4">
               <li><b>Plan:</b> {latestPurchase.planName}</li>
@@ -419,8 +421,8 @@ console.log("test")
                       alarm.priority === "High"
                         ? "bg-red-200"
                         : alarm.priority === "Normal"
-                        ? "bg-green-200"
-                        : "bg-blue-200"
+                          ? "bg-green-200"
+                          : "bg-blue-200"
                     }
                   >
                     <td className="px-3 py-2 font-semibold">{alarm.gatewayId}</td>
@@ -431,13 +433,12 @@ console.log("test")
                     <td className="px-3 py-2">{alarm.subcategory}</td>
                     <td className="px-3 py-2">{alarm.value}</td>
                     <td
-                      className={`px-3 py-2 font-semibold ${
-                        alarm.priority === "High"
-                          ? "text-red-600"
-                          : alarm.priority === "Normal"
+                      className={`px-3 py-2 font-semibold ${alarm.priority === "High"
+                        ? "text-red-600"
+                        : alarm.priority === "Normal"
                           ? "text-green-700"
                           : "text-blue-600"
-                      }`}
+                        }`}
                     >
                       {alarm.priority}
                     </td>

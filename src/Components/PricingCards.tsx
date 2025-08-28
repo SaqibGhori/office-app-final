@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { api } from "../api";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheck } from "@fortawesome/free-solid-svg-icons";
@@ -28,6 +28,78 @@ export default function PricingCards() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  // --- Mobile slider state/refs (mobile-only) ---
+  const mobileSliderRef = useRef<HTMLDivElement | null>(null);
+  const autoTimerRef = useRef<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isAutoSliding, setIsAutoSliding] = useState(true);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const totalSlides = 3; // Monthly, Custom, Yearly
+console.log(currentSlide)
+  const pauseSlider = () => {
+    setIsAutoSliding(false);
+    if (autoTimerRef.current) {
+      window.clearInterval(autoTimerRef.current);
+      autoTimerRef.current = null;
+    }
+  };
+
+  const scrollToIndex = (idx: number) => {
+    const container = mobileSliderRef.current;
+    if (!container) return;
+    const child = container.children[idx] as HTMLElement | undefined;
+    if (!child) return;
+    // Center the slide smoothly
+    child.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  };
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const setFromMQ = (e: MediaQueryList | MediaQueryListEvent) =>
+      setIsMobile("matches" in e ? e.matches : (e as MediaQueryList).matches);
+    setFromMQ(mq);
+    mq.addEventListener?.("change", setFromMQ);
+    return () => mq.removeEventListener?.("change", setFromMQ);
+  }, []);
+
+  // Auto-slide on mobile
+  useEffect(() => {
+    // Pause auto-slide when modal is open
+    if (isModalOpen) {
+      pauseSlider();
+      return;
+    }
+    if (!isMobile || !isAutoSliding) {
+      if (autoTimerRef.current) {
+        window.clearInterval(autoTimerRef.current);
+        autoTimerRef.current = null;
+      }
+      return;
+    }
+    autoTimerRef.current = window.setInterval(() => {
+      setCurrentSlide((prev) => {
+        const next = (prev + 1) % totalSlides;
+        scrollToIndex(next);
+        return next;
+      });
+    }, 2500); // auto advance every 2.5s
+
+    return () => {
+      if (autoTimerRef.current) {
+        window.clearInterval(autoTimerRef.current);
+        autoTimerRef.current = null;
+      }
+    };
+  }, [isMobile, isAutoSliding, isModalOpen]);
+
+  const handleMobileCardClick = (index: number) => {
+    // Clicking any slide should pause and lock on that slide
+    pauseSlider();
+    setCurrentSlide(index);
+    scrollToIndex(index);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const basePerDevice = 500;
@@ -156,7 +228,7 @@ export default function PricingCards() {
     <section className="relative overflow-hidden py-20 md:py-28 bg-[#0b0f1a]">
       {/* purple glow like screenshot */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="h-[520px] w-[520px] rounded-full bg-violet-700/30 blur-3xl"></div>
+        <div className="h-[520px] w-[520px] rounded-full bg-blue-800/30 blur-3xl"></div>
       </div>
 
       {/* Header — content same as your original */}
@@ -170,9 +242,205 @@ export default function PricingCards() {
         </p>
       </div>
 
-      {/* Cards */}
-      <div className="relative mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-6xl px-6">
-        {/* Monthly (LEFT) — content unchanged */}
+      {/* ---------------- MOBILE SLIDER (only on small screens) ---------------- */}
+      <div
+        ref={mobileSliderRef}
+        className="md:hidden relative flex overflow-x-auto snap-x snap-mandatory scroll-smooth gap-4 px-6"
+        // optional: hide scrollbar on some browsers
+        style={{ scrollBehavior: "smooth" }}
+      >
+        {/* Slide 0: Monthly */}
+        <div
+          className="snap-center shrink-0 w-[88%]"
+          onClick={() => handleMobileCardClick(0)}
+        >
+          <div className="group relative rounded-2xl border border-white/10 bg-white/5 p-8 text-center backdrop-blur-sm transition-transform duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-black/40">
+            <h3 className="text-2xl font-bold text-indigo-400">Monthly</h3>
+            <p className="mt-4 text-5xl font-extrabold tracking-tight text-white">
+              500<span className="text-2xl align-top"> RS</span>
+            </p>
+            <p className="mt-1 text-sm text-gray-400">per month</p>
+
+            <ul className="mt-6 space-y-2 text-sm text-gray-300">
+              <li>✔ 1 Device</li>
+              <li>✔ 500 Base Price</li>
+              <li>✔ 1 Month Access</li>
+              <li>✔ Email Support</li>
+            </ul>
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation(); // don't re-trigger slide pause
+                handleChooseClick({
+                  name: "Monthly",
+                  price: 500,
+                  duration: "1 Month",
+                  devices: "1",
+                  basePrice: 500,
+                  discountAmount: 0,
+                  discountPercent: 0,
+                });
+              }}
+              className="mt-8 w-full rounded-xl border border-white/20 bg-transparent px-4 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/10"
+            >
+              Choose
+            </button>
+          </div>
+        </div>
+
+        {/* Slide 1: Custom */}
+        <div
+          className="snap-center shrink-0 w-[88%] mt-10"
+          onClick={() => handleMobileCardClick(1)}
+        >
+          <div className="group relative rounded-2xl bg-gradient-to-b from-violet-600 to-fuchsia-600 p-[2px] shadow-2xl shadow-violet-900/30 transition-transform duration-300 hover:-translate-y-2">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-gray-900 shadow">
+              Most Popular
+            </div>
+
+            <div className="rounded-2xl bg-[#0b0f1a] p-8 text-center">
+              <h3 className="text-2xl font-bold text-white">Custom</h3>
+              <p className="mt-4 text-5xl font-extrabold tracking-tight text-white">
+                {formData.price}
+                <span className="text-2xl align-top"> RS</span>
+              </p>
+              <p className="mt-1 text-sm text-white/70">
+                {formData.durationValue ?? 0} / {formData.planDuration}
+              </p>
+
+              <ul className="mt-6 space-y-2 text-sm">
+                <li className="flex items-center justify-center gap-2 text-white">
+                  <FontAwesomeIcon className="text-yellow-300" icon={faCheck} />{" "}
+                  {formData.device || 0} Devices
+                </li>
+                <li className="flex items-center justify-center gap-2 text-white">
+                  <FontAwesomeIcon className="text-yellow-300" icon={faCheck} />{" "}
+                  Base {formData.basePrice || 0} RS
+                </li>
+                <li className="flex items-center justify-center gap-2 text-white">
+                  <FontAwesomeIcon className="text-yellow-300" icon={faCheck} />{" "}
+                  Save {formData.discountAmount || 0} RS
+                </li>
+                <li className="flex items-center justify-center gap-2 text-white">
+                  <FontAwesomeIcon className="text-yellow-300" icon={faCheck} /> (
+                  {formData.discountPercent || 0}% off)
+                </li>
+                <li className="flex items-center justify-center gap-2 text-white">
+                  <FontAwesomeIcon className="text-yellow-300" icon={faCheck} />{" "}
+                  Full Access
+                </li>
+              </ul>
+
+              {/* Radios */}
+              <div className="mt-5 flex justify-center gap-6 text-sm text-white">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="planDuration"
+                    value="Months"
+                    onChange={handleChange}
+                    checked={formData.planDuration === "Months"}
+                  />{" "}
+                  Monthly
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="planDuration"
+                    value="Years"
+                    onChange={handleChange}
+                    checked={formData.planDuration === "Years"}
+                  />{" "}
+                  Yearly
+                </label>
+              </div>
+
+              {/* Inputs */}
+              <div className="mt-4 flex justify-center gap-3">
+                <input
+                  onChange={handleChange}
+                  name="device"
+                  value={formData.device ?? ""}
+                  type="number"
+                  placeholder="Devices"
+                  className="w-24 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-white/20"
+                />
+                <input
+                  onChange={handleChange}
+                  name="durationValue"
+                  value={formData.durationValue ?? ""}
+                  type="number"
+                  placeholder="Duration"
+                  className="w-24 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-white/20"
+                />
+              </div>
+
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleChooseClick({
+                    name: "Custom",
+                    price: formData.price,
+                    duration: `${formData.durationValue ?? 0} ${formData.planDuration}`,
+                    devices: formData.device,
+                    basePrice: formData.basePrice,
+                    discountAmount: formData.discountAmount,
+                    discountPercent: formData.discountPercent,
+                  });
+                }}
+                className="mt-8 w-full rounded-xl border border-white/20 bg-transparent px-4 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/10"
+              >
+                Choose
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Slide 2: Yearly */}
+        <div
+          className="snap-center shrink-0 w-[88%]"
+          onClick={() => handleMobileCardClick(2)}
+        >
+          <div className="group relative rounded-2xl border border-white/10 bg-white/5 p-8 text-center backdrop-blur-sm transition-transform duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-black/40">
+            <h3 className="text-2xl font-bold text-indigo-400">Yearly</h3>
+            <p className="mt-4 text-5xl font-extrabold tracking-tight text-white">
+              {yearlyFinalPrice}
+              <span className="text-2xl align-top"> RS</span>
+            </p>
+            <p className="mt-1 text-sm text-gray-400">per year</p>
+
+            <ul className="mt-6 space-y-2 text-sm text-gray-300">
+              <li>✔ {yearlyDevices} Devices</li>
+              <li>✔ Base {yearlyBasePrice} RS</li>
+              <li>✔ Save {yearlyDiscountAmount} RS</li>
+              <li>✔ ({yearlyDiscountPercent * 100}% off)</li>
+              <li>✔ 1 Year Full Access</li>
+            </ul>
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleChooseClick({
+                  name: "Yearly",
+                  price: yearlyFinalPrice,
+                  duration: "1 Year",
+                  devices: yearlyDevices,
+                  basePrice: yearlyBasePrice,
+                  discountAmount: yearlyDiscountAmount,
+                  discountPercent: yearlyDiscountPercent * 100,
+                });
+              }}
+              className="mt-8 w-full rounded-xl border border-white/20 bg-transparent px-4 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/10"
+            >
+              Choose
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ---------------- DESKTOP/TABLET GRID (unchanged UI, md and up) ---------------- */}
+      <div className="relative mx-auto hidden md:grid md:grid-cols-3 gap-6 md:gap-8 max-w-6xl px-6">
+        {/* Monthly */}
         <div className="group relative rounded-2xl border border-white/10 bg-white/5 p-8 text-center backdrop-blur-sm transition-transform duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-black/40">
           <h3 className="text-2xl font-bold text-indigo-400">Monthly</h3>
           <p className="mt-4 text-5xl font-extrabold tracking-tight text-white">
@@ -205,9 +473,9 @@ export default function PricingCards() {
           </button>
         </div>
 
-        {/* Custom (CENTER) — radios + inputs visible, content same */}
+        {/* Custom */}
         <div className="group relative rounded-2xl bg-gradient-to-b from-violet-600 to-fuchsia-600 p-[2px] shadow-2xl shadow-violet-900/30 transition-transform duration-300 hover:-translate-y-2">
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-gray-900 shadow">
+          <div className="absolute -top-3 left-1/2 z-10 -translate-x-1/2 rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-gray-900 shadow">
             Most Popular
           </div>
 
@@ -244,7 +512,7 @@ export default function PricingCards() {
               </li>
             </ul>
 
-            {/* Radios — visible just like your original */}
+            {/* Radios */}
             <div className="mt-5 flex justify-center gap-6 text-sm text-white">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -268,7 +536,7 @@ export default function PricingCards() {
               </label>
             </div>
 
-            {/* Inputs — same names/behavior */}
+            {/* Inputs */}
             <div className="mt-4 flex justify-center gap-3">
               <input
                 onChange={handleChange}
@@ -288,7 +556,6 @@ export default function PricingCards() {
               />
             </div>
 
-            {/* Your fancy "Most Selling" button kept as-is */}
             <button
               onClick={() =>
                 handleChooseClick({
@@ -301,13 +568,14 @@ export default function PricingCards() {
                   discountPercent: formData.discountPercent,
                 })
               }
-              className="mt-8 w-full rounded-xl border border-white/20 bg-transparent px-4 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/10"            >
+              className="mt-8 w-full rounded-xl border border-white/20 bg-transparent px-4 py-3 text-sm font-semibold text-white/90 transition hover:bg-white/10"
+            >
               Choose
             </button>
           </div>
         </div>
 
-        {/* Yearly (RIGHT) — content unchanged */}
+        {/* Yearly */}
         <div className="group relative rounded-2xl border border-white/10 bg-white/5 p-8 text-center backdrop-blur-sm transition-transform duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-black/40">
           <h3 className="text-2xl font-bold text-indigo-400">Yearly</h3>
           <p className="mt-4 text-5xl font-extrabold tracking-tight text-white">
