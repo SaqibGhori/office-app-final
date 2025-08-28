@@ -44,13 +44,15 @@ const Navbar: React.FC = () => {
                     Alarms
                   </Link>
                   
-                  <Link to={`/alaram${gatewayId ? `?gateway=${gatewayId}` : ""}`}>
-                    Device Settings
-                  </Link>
+              
+
 
                 </>
                 : null
               }
+                 <Link to={`/device-settings${gatewayId ? `?gateway=${gatewayId}` : ""}`}>
+  Device Settings
+</Link>
             </>
           )}
 
