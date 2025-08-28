@@ -90,6 +90,7 @@ export default function DeviceSettings() {
       setBusyId(null);
     }
   };
+// import React from 'react'
 
   return (
     <div className="p-4 max-w-5xl mx-auto">
