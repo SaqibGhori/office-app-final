@@ -36,11 +36,15 @@ const Navbar: React.FC = () => {
           {token && (
             <>
               <li><Link to="/dashboard">Main Dashboard</Link></li>
+                 <Link to={`/device-settings${gatewayId ? `?gateway=${gatewayId}` : ""}`}>
+  Device Settings
+</Link>
               {gatewayId && (
                 <>
                   <li><Link to={`/maindashboard?gateway=${gatewayId}`}>Dashboard</Link></li>
                   <li><Link to={`/fileview?gateway=${gatewayId}`}>File View</Link></li>
                   <li><Link to={`/alaram?gateway=${gatewayId}`}>Alarms</Link></li>
+                  
                 </>
               )}
             </>

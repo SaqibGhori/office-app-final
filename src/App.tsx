@@ -40,6 +40,7 @@ import SuperLoginPage from './Pages/SuperLoginPage';
 import SuperHome from './Pages/SuperHome';
 import Navbar from './Components/Navbar';
 import SuperUsersSettings from './Pages/SuperUsersSettings'
+import DeviceSettings from './Pages/DeviceSettings';
 
 export default function App() {
   return (
@@ -92,12 +93,14 @@ export default function App() {
             >
               <Route path="/dashboard" element={<Home />} />
               <Route path="/maindashboard" element={<MainDashboard />} />
+                <Route path="/device-settings" element={<DeviceSettings />} />
               <Route path="/fileview" element={<FileView />} />
               <Route path="/fileview/export" element={<FileViewDownloadPage />} />
               <Route path="/harmonics" element={<Harmonics />} />
               <Route path="/alaram" element={<Alaram />} />
               <Route path="/alarm-download" element={<AlarmDownloadPage />} />
               <Route path="/settings" element={<Settings />} />
+
             </Route>
 
             {/* ───────── Fallback ───────── */}
