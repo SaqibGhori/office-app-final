@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import MixChartHome from "../Components/MixChartHome";
 import { useNavigate } from "react-router-dom";
 import { useSocket } from "../hooks/useSocket";
@@ -61,7 +61,7 @@ const Home = () => {
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
-
+console.log(activePlan,loading)
   // -------------------- META LOAD (me + latest purchase any status) --------------------
   useEffect(() => {
     if (!token) return;
