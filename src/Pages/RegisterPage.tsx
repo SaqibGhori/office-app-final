@@ -100,7 +100,7 @@ export default function RegisterPage() {
       <div className="w-full md:w-1/2 h-[40vh] md:h-[90vh] flex justify-center items-center">
         <div>
           <img src={watticon} className="w-32 md:w-48 mx-auto" alt="" />
-          <h1 className="text-white font-serif font-bold text-3xl md:text-5xl text-center md:text-left">
+          <h1 className="text-white font-sans font-bold text-3xl md:text-5xl text-center md:text-left">
             Watt Matrix
           </h1>
         </div>

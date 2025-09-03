@@ -92,11 +92,11 @@ const MixChartHome: React.FC = () => {
   }, []);
 
   const options: ApexOptions = {
-    chart: {
-      type: "bar",
-      height: 430,
-    },
-    plotOptions: {
+    
+     chart: { type: "bar",  },
+      colors: ["#000066", "#eb1414",], 
+    
+    plotOptions: {  
       bar: {
         horizontal: false,
         dataLabels: {

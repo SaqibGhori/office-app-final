@@ -324,19 +324,19 @@ console.log(activePlan,loading)
 
   // -------------------- NORMAL DASHBOARD (paid or admin/superadmin) --------------------
   return (
-    <div className="mx-auto w-full min-h-screen bg-secondary px-3 sm:px-4 md:px-6 lg:px-8 py-4">
+    <div className="mx-auto w-full min-h-screen bg-secondary px-3 sm:px-4 md:px-6 lg:px-8 py-4 pb-10">
       <div className="flex flex-col md:flex-row gap-4 md:gap-6">
         {/* LEFT: Main Content on mobile, but on desktop it appears on left (order-1) */}
         <div className="order-2 md:order-2 w-full md:flex-1">
-          <div className="bg-white rounded-xl shadow-sm p-3 sm:p-4 mb-4">
+          <div className="bg-white rounded-xl shadow-sm p-3 sm:p-4 mb-4 ">
             <MixChartHome />
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm">
+          <div className="bg-white rounded-xl shadow-sm ">
             <h2 className="text-lg sm:text-xl font-bold p-3 sm:p-4">Live + Saved Alarms</h2>
 
             {/* table wrapper keeps it scrollable on small screens */}
-            <div className="px-3 sm:px-4 pb-4 max-h-[60vh] overflow-y-auto overflow-x-auto">
+            <div className="px-3 sm:px-4 pb-4 max-h-[60vh] min-h-80 overflow-y-auto overflow-x-auto">
               <table className="min-w-full table-auto text-xs sm:text-sm">
                 <thead className="bg-gray-200 sticky top-0 z-10">
                   <tr>
@@ -409,17 +409,17 @@ console.log(activePlan,loading)
         <aside className="order-1 md:order-1 w-full md:w-[28%] lg:w-[24%] xl:w-[20%]">
           <div className="md:sticky md:top-4">
             <div className="text-center">
-              <h2 className="text-xl sm:text-2xl font-bold mt-2 md:mt-4">Gateways</h2>
+              <h2 className="text-xl sm:text-2xl font-bold mt-2 md:mt-4">Devices</h2>
 
               {/* Usage chips */}
               <div className="mt-3 grid grid-cols-3 gap-2 max-w-xs mx-auto text-xs sm:text-sm">
-                <div className="px-2 py-1 rounded bg-white shadow text-center">
+                <div className="px-1 py-1 rounded  shadow text-center">
                   <b>Used:</b> {used}
                 </div>
-                <div className="px-2 py-1 rounded bg-white shadow text-center">
+                <div className="px-1 py-1 rounded  shadow text-center">
                   <b>Limit:</b> {planLimit ?? "-"}
                 </div>
-                <div className="px-2 py-1 rounded bg-white shadow text-center">
+                <div className="px-1 py-1 rounded  shadow text-center">
                   <b>Remain:</b> {remaining ?? "-"}
                 </div>
               </div>
@@ -438,18 +438,20 @@ console.log(activePlan,loading)
               </button>
             </div>
 
-            <div className="mt-2 max-h-[50vh] overflow-y-auto px-2">
+            <div className="mt-2 max-h-[50vh]  ">
               {gateways.map((gateway) => (
                 <button
                   key={gateway._id}
                   onClick={() => handleSelectGateway(gateway.gatewayId)}
-                  className="w-full py-3 px-4 text-left border rounded-lg bg-gray-800 text-white hover:bg-gray-600 mb-2"
+                  className="w-full py-3 px-4 text-left  text-xl  text-primary hover:bg-gray-400 "
                 >
                   <div className="font-bold">{gateway.name}</div>
-                  <div className="text-xs opacity-80">ID: {gateway.gatewayId}</div>
+                  {/* <div className="text-xs opacity-80">ID: {gateway.gatewayId}</div> */}
                 </button>
+                
               ))}
             </div>
+
           </div>
         </aside>
       </div>

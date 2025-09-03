@@ -1,14 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect , useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
-
+import watticon from '../../assets/watticon.png'
 const Navbar: React.FC = () => {
   const { token, logout } = useAuth();
   const navigate = useNavigate();
   const { search } = useLocation();
   const gatewayId = new URLSearchParams(search).get("gateway");
   const [isOpen, setIsOpen] = useState(false);
+
+    const [open, setOpen] = useState(false);
+  // Parent ko <li> ya <div> jo bhi use kar rahe ho — type match kara do
+  const ddRef = useRef<HTMLLIElement | null>(null);
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      const targetNode = e.target as Node | null;
+      if (ddRef.current && targetNode && !ddRef.current.contains(targetNode)) {
+        setOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("click", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("click", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -17,21 +39,81 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className=" sticky top-0 z-50 bg-gradient-to-r from-[#BFCBCE] to-primary  ">
+    <nav className=" sticky top-0 z-50 bg-gradient-to-tr from-primary to-[#BFCBCE]">
       <div className="max-w-screen-xl mx-auto p-4 flex items-center justify-between">
 
         {/* LEFT - LOGO */}
-        <Link to="/" className="text-xl font-bold text-primary dark:text-white">
-          Watt Matrix
+        <Link to="/" className='flex justify-center items-center gap-1' >
+        <img src={watticon} className='w-10' alt="" />
+         <span className="text-xl font-bold text-secondary dark:text-white">Watt Matrix</span> 
         </Link>
 
         {/* DESKTOP MENU */}
         <ul className="hidden md:flex items-center space-x-6 text-gray-900 dark:text-white font-medium">
           <li><Link to="/">Home</Link></li>
-          <li><Link to="/aboutus">About Us</Link></li>
-          <li><Link to="/contact">Contact Us</Link></li>
-          <li><Link to="/termsandconditions">Terms And Conditions</Link></li>
-          <li><Link to="/privacy">Privacy Policy</Link></li>
+          <li className="relative" ref={ddRef}>
+            <button
+              type="button"
+              onClick={() => setOpen((o) => !o)}
+              aria-haspopup="menu"
+              aria-expanded={open}
+              className="flex items-center gap-1 rounded-xl px-2 py-2 text-gray-900 hover:bg-primary hover:text-secondary transition"
+            >
+              Dropdown
+              <svg
+                viewBox="0 0 24 24"
+                className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`}
+                aria-hidden="true"
+              >
+                <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" fill="none" />
+              </svg>
+            </button>
+
+            <div
+              role="menu"
+              className={[
+                "absolute right-0 mt-2 w-56 origin-top-right rounded-xl border border-gray-200 bg-white shadow-xl",
+                "transition transform",
+                open
+                  ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
+                  : "opacity-0 scale-95 -translate-y-2 pointer-events-none",
+                "z-50 overflow-hidden"
+              ].join(" ")}
+            >
+              <Link
+                to="/aboutus"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="block px-4 py-2 text-primary hover:bg-primary hover:text-secondary"
+              >
+                About Us
+              </Link>
+              <Link
+                to="/contact"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="block px-4 py-2 text-primary hover:bg-primary hover:text-secondary"
+              >
+                Contact Us
+              </Link>
+              <Link
+                to="/termsandconditions"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="block px-4 py-2 text-primary hover:bg-primary hover:text-secondary"
+              >
+                Terms &amp; Conditions
+              </Link>
+              <Link
+                to="/privacy"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="block px-4 py-2 text-primary hover:bg-primary hover:text-secondary"
+              >
+                Privacy Policy
+              </Link>
+            </div>
+          </li>
 
           {token && (
             <>
