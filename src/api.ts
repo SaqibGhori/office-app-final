@@ -1,9 +1,10 @@
 // src/api.ts
 import axios from "axios";
 
-const BASE = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const BASE = import.meta.env.VITE_DataAPI_URL || "http://localhost:3000";
 
-export const api = axios.create({ baseURL: BASE });
+export const  
+api = axios.create({ baseURL: BASE });
 
 // token auto attach
 api.interceptors.request.use((config) => {

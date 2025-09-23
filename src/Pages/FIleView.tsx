@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-// import axios from "axios";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import FileViewChart from "../Components/FileViewChart";
 import { toast, ToastContainer } from "react-toastify";
@@ -16,6 +15,17 @@ interface Reading {
   data: ReadingData;
 }
 
+// ---- Helpers for encoding/decoding selected pairs in URL ----
+const makeKey = (cat: string, sub: string) => `${cat}|${sub}`;
+const splitKey = (key: string): { cat: string; sub: string } | null => {
+  if (!key) return null;
+  const idx = key.indexOf("|");
+  if (idx === -1) return null;
+  const cat = key.slice(0, idx);
+  const sub = key.slice(idx + 1);
+  return { cat, sub };
+};
+
 export default function FileView() {
   const [allData, setAllData] = useState<Reading[]>([]);
   const [filteredData, setFilteredData] = useState<Reading[]>([]);
@@ -28,8 +38,18 @@ export default function FileView() {
   const navigate = useNavigate();
 
   const selectedGateway = searchParams.get("gateway") || "";
-  const selectedCategory = searchParams.get("category");
-  const selectedSubcategories = searchParams.get("subs")?.split(",") || [];
+  // NEW: multi-category subcategory selection via "pairs"
+  const selectedPairsKeys = (searchParams.get("pairs") || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  // Derived parsed pairs (stable memo)
+  const selectedPairs = useMemo(
+    () => selectedPairsKeys.map(splitKey).filter(Boolean) as { cat: string; sub: string }[],
+    [selectedPairsKeys]
+  );
+
   const startDate = searchParams.get("startDate") || "";
   const endDate = searchParams.get("endDate") || "";
   const secInterval = parseInt(searchParams.get("secInterval") || "0", 10);
@@ -56,9 +76,8 @@ export default function FileView() {
     if (gatewayId && !selectedGateway) {
       updateParams({ gateway: gatewayId });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gatewayId, selectedGateway]);
-
-  console.log(allData);
 
   const fetchData = (showLoader: boolean) => {
     if (!selectedGateway) return;
@@ -85,22 +104,20 @@ export default function FileView() {
         setTotalCount(total);
         setFilteredData(data);
 
-        if (!selectedCategory && data.length) {
+        // Default selection: first category -> all subs (keeps previous UX)
+        if (selectedPairsKeys.length === 0 && data.length) {
           const firstCat = Object.keys(data[0].data || {})[0];
-          if (!firstCat) return;
-
-          const uniqueSubs = new Set<string>();
-          data.forEach((item: Reading) => {
-            const subs = item.data?.[firstCat];
-            if (subs) {
-              Object.keys(subs).forEach((key) => uniqueSubs.add(key));
+          if (firstCat) {
+            const uniqueSubs = new Set<string>();
+            data.forEach((item: Reading) => {
+              const subs = item.data?.[firstCat];
+              if (subs) Object.keys(subs).forEach((s) => uniqueSubs.add(s));
+            });
+            const defaults = Array.from(uniqueSubs).map((s) => makeKey(firstCat, s));
+            if (defaults.length) {
+              updateParams({ pairs: defaults.join(",") });
             }
-          });
-
-          updateParams({
-            category: firstCat,
-            subs: Array.from(uniqueSubs).join(","),
-          });
+          }
         }
       })
       .catch((err) => {
@@ -118,12 +135,14 @@ export default function FileView() {
     if (selectedGateway && (startDate || endDate || secInterval > 0)) {
       fetchData(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedGateway, startDate, endDate, secInterval, page]);
 
   useEffect(() => {
     if (selectedGateway && !startDate && !endDate && secInterval === 0) {
       fetchData(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedGateway, page]);
 
   const handleFilter = () => {
@@ -157,47 +176,68 @@ export default function FileView() {
 
   const handleGatewayChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
-    updateParams({ gateway: val, page: "1", category: "", subs: "" });
+    // clear pairs on gateway change
+    updateParams({ gateway: val, page: "1", pairs: "" });
     navigate(`/fileview${val ? `?gateway=${val}` : ""}`);
   };
 
-  const toggleSub = (sub: string) => {
-    const upd = selectedSubcategories.includes(sub)
-      ? selectedSubcategories.filter((s) => s !== sub)
-      : [...selectedSubcategories, sub];
-    updateParams({ subs: upd.join(",") });
-  };
-
-  const getSubs = (): string[] => {
-    const s = new Set<string>();
-    filteredData.forEach((e) => {
-      const cat = e.data[selectedCategory!];
-      if (cat) Object.keys(cat).forEach((sub) => s.add(sub));
-    });
-    return Array.from(s);
-  };
-
+  // ---- Category/Subcategory utilities ----
   const getCategories = (): string[] => {
     const categories = new Set<string>();
-    filteredData.forEach((entry) => {
-      Object.keys(entry.data).forEach((cat) => categories.add(cat));
+    const base = filteredData.length ? filteredData : allData;
+    base.forEach((entry) => {
+      Object.keys(entry.data || {}).forEach((cat) => categories.add(cat));
     });
-    return Array.from(categories);
+    return Array.from(categories).sort();
   };
 
   const getSubcategoriesByCategory = (cat: string): string[] => {
     const subSet = new Set<string>();
-    filteredData.forEach((entry) => {
-      const subData = entry.data[cat];
-      if (subData) {
-        Object.keys(subData).forEach((sub) => subSet.add(sub));
-      }
+    const base = filteredData.length ? filteredData : allData;
+    base.forEach((entry) => {
+      const subData = entry.data?.[cat];
+      if (subData) Object.keys(subData).forEach((s) => subSet.add(s));
     });
-    return Array.from(subSet);
+    return Array.from(subSet).sort();
   };
 
+  const isPairSelected = (cat: string, sub: string) =>
+    selectedPairsKeys.includes(makeKey(cat, sub));
+
+  const togglePair = (cat: string, sub: string) => {
+    const key = makeKey(cat, sub);
+    const next = isPairSelected(cat, sub)
+      ? selectedPairsKeys.filter((k) => k !== key)
+      : [...selectedPairsKeys, key];
+    updateParams({ pairs: next.join(",") || null });
+  };
+
+  const selectAllSubsInCategory = (cat: string) => {
+    const subs = getSubcategoriesByCategory(cat);
+    const set = new Set(selectedPairsKeys);
+    subs.forEach((s) => set.add(makeKey(cat, s)));
+    updateParams({ pairs: Array.from(set).join(",") });
+  };
+
+  const clearAllSubsInCategory = (cat: string) => {
+    const next = selectedPairsKeys.filter((k) => !k.startsWith(`${cat}|`));
+    updateParams({ pairs: next.join(",") || null });
+  };
+
+  // ---- Chart support (only when all pairs belong to one category) ----
+  const singleCategoryForChart = useMemo(() => {
+    if (selectedPairs.length === 0) return null;
+    const cats = new Set(selectedPairs.map((p) => p.cat));
+    return cats.size === 1 ? selectedPairs[0].cat : null;
+  }, [selectedPairs]);
+
+  const subcategoriesForChart = useMemo(() => {
+    if (!singleCategoryForChart) return [];
+    return selectedPairs.filter((p) => p.cat === singleCategoryForChart).map((p) => p.sub);
+  }, [selectedPairs, singleCategoryForChart]);
+
   return (
-    <div className="mx-auto max-w-7xl px-3 sm:px-4 md:px-6 lg:px-8 py-4">
+    <div className="mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4">
       <ToastContainer />
       <h1 className="text-2xl sm:text-3xl font-bold">File View</h1>
 
@@ -241,7 +281,9 @@ export default function FileView() {
 
           <div className="flex items-end sm:items-center sm:justify-end">
             <button
-              className={`w-full sm:w-auto px-4 py-2 rounded text-white ${isFilterValid ? "bg-blue-600" : "bg-gray-400 cursor-not-allowed"}`}
+              className={`w-full sm:w-auto px-4 py-2 rounded text-white ${
+                isFilterValid ? "bg-blue-600" : "bg-gray-400 cursor-not-allowed"
+              }`}
               onClick={handleFilter}
               disabled={!isFilterValid}
             >
@@ -251,10 +293,22 @@ export default function FileView() {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="mt-6 md:mt-8 flex flex-col md:flex-row gap-4 md:gap-6">
+      {/* Content (Equal-height layout on desktop) */}
+      <div
+        className="
+          mt-6 md:mt-8
+          grid grid-cols-1 md:grid-cols-[minmax(16rem,20rem)_1fr]
+          gap-4 md:gap-6 items-stretch
+        "
+      >
         {/* Sidebar */}
-        <aside className="w-full md:w-64 bg-gray-800 text-white p-4 rounded-xl md:rounded-none md:sticky md:top-0 md:h-screen md:self-start overflow-y-auto">
+        <aside
+          className="
+            bg-gray-800 text-white rounded-xl md:rounded-xl
+            p-4 h-full
+            flex flex-col
+          "
+        >
           <select
             className="w-full mb-4 p-2 text-black rounded"
             value={selectedGateway}
@@ -270,67 +324,86 @@ export default function FileView() {
             ))}
           </select>
 
-          <h2 className="text-lg sm:text-xl font-bold mb-3">Categories</h2>
-          <div className="max-h-48 overflow-y-auto pr-1">
-            {getCategories().map((cat) => (
-              <button
-                key={cat}
-                onClick={() => {
-                  const subs = getSubcategoriesByCategory(cat);
-                  updateParams({ category: cat, subs: subs.join(",") });
-                }}
-                className={`block w-full text-left px-2 py-1 mb-1 rounded ${selectedCategory === cat ? "bg-gray-700" : "hover:bg-gray-700"}`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+          <h2 className="text-lg sm:text-xl font-bold mb-3">Categories &amp; Subcategories</h2>
 
-          {selectedCategory && (
-            <div className="mt-4">
-              <h3 className="font-semibold mb-2">Subcategories</h3>
-              <div className="max-h-40 overflow-y-auto pr-1">
-                {getSubs().map((sub) => (
-                  <label key={sub} className="flex items-center gap-2 mb-1">
-                    <input
-                      type="checkbox"
-                      checked={selectedSubcategories.includes(sub)}
-                      onChange={() => toggleSub(sub)}
-                    />
-                    {sub}
-                  </label>
-                ))}
-              </div>
+          {getCategories().length === 0 ? (
+            <p className="text-gray-300 text-sm">No categories found.</p>
+          ) : (
+            <div className="space-y-3 overflow-y-auto pr-1 flex-1">
+              {getCategories().map((cat) => {
+                const subs = getSubcategoriesByCategory(cat);
+                const anySelected = subs.some((s) => isPairSelected(cat, s));
+                return (
+                  <div key={cat} className="bg-gray-700/40 rounded-lg p-2">
+                    <div className="flex items-center justify-between">
+                      <div className="font-semibold break-words">{cat}</div>
+                      <div className="flex items-center gap-2 text-xs">
+                        <button
+                          className="bg-gray-600 hover:bg-gray-500 px-2 py-1 rounded"
+                          onClick={() => selectAllSubsInCategory(cat)}
+                        >
+                          Select all
+                        </button>
+                        <button
+                          className="bg-gray-600 hover:bg-gray-500 px-2 py-1 rounded disabled:opacity-50"
+                          onClick={() => clearAllSubsInCategory(cat)}
+                          disabled={!anySelected}
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </div>
+                    <div className="max-h-44 overflow-y-auto pr-1 mt-2 space-y-1">
+                      {subs.length ? (
+                        subs.map((sub) => (
+                          <label key={sub} className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={isPairSelected(cat, sub)}
+                              onChange={() => togglePair(cat, sub)}
+                            />
+                            <span className="text-sm break-words">{sub}</span>
+                          </label>
+                        ))
+                      ) : (
+                        <div className="text-xs text-gray-300">No subcategories.</div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </aside>
 
         {/* Main */}
-        <main className="flex-1">
+        <main className="h-full">
           {isLoading ? (
-            <div className="text-center text-gray-500 text-lg py-10">
-              Loading data...
-            </div>
+            <div className="text-center text-gray-500 text-lg py-10">Loading data...</div>
           ) : selectedGateway ? (
             switchToChart === "table" ? (
-              <div className="bg-white rounded-xl shadow p-3 sm:p-4">
+              <div className="bg-white rounded-xl shadow p-3 sm:p-4 h-full flex flex-col">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <h2 className="text-xl sm:text-2xl font-bold">Data Table</h2>
-                  <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:items-center w-full sm:w-auto">
                     <button
-                      className=" text-primary"
+                      className="text-primary disabled:text-gray-400 disabled:cursor-not-allowed"
                       onClick={() => updateParams({ view: "chart" })}
+                      disabled={selectedPairs.length === 0}
+                      title={
+                        selectedPairs.length === 0
+                          ? "Select at least one subcategory to view chart"
+                          : "Switch to Chart"
+                      }
                     >
                       Switch To Chart
                     </button>
-                    <button
-                      onClick={() =>
-                        navigate(`/fileview/export?${searchParams.toString()}`)
-                      }
+                    {/* <button
+                      onClick={() => navigate(`/fileview/export?${searchParams.toString()}`)}
                       className="bg-green-600 text-white px-3 py-2 rounded"
                     >
                       Export File
-                    </button>
+                    </button> */}
                   </div>
                 </div>
 
@@ -338,11 +411,15 @@ export default function FileView() {
                   <table className="min-w-full bg-white rounded">
                     <thead>
                       <tr className="bg-gray-200">
-                        <th className="px-4 py-2 text-left">Date</th>
-                        <th className="px-4 py-2 text-left">Time</th>
-                        {selectedSubcategories.map((sub) => (
-                          <th key={sub} className="px-4 py-2 text-left">
-                            {sub}
+                        <th className="px-4 py-2 text-left whitespace-nowrap">Date</th>
+                        <th className="px-4 py-2 text-left whitespace-nowrap">Time</th>
+                        {selectedPairs.map(({ cat, sub }) => (
+                          <th
+                            key={makeKey(cat, sub)}
+                            className="px-4 py-2 text-left whitespace-nowrap"
+                            title={`${sub} (${cat})`}
+                          >
+                            {sub} <span className="text-gray-600 text-xs">({cat})</span>
                           </th>
                         ))}
                       </tr>
@@ -352,11 +429,15 @@ export default function FileView() {
                         const d = new Date(entry.timestamp);
                         return (
                           <tr key={i} className="border-t">
-                            <td className="px-4 py-2">{d.toLocaleDateString()}</td>
-                            <td className="px-4 py-2">{d.toLocaleTimeString()}</td>
-                            {selectedSubcategories.map((sub) => (
-                              <td key={sub} className="px-4 py-2">
-                                {entry.data[selectedCategory!]?.[sub] ?? "-"}
+                            <td className="px-4 py-2 whitespace-nowrap">
+                              {d.toLocaleDateString()}
+                            </td>
+                            <td className="px-4 py-2 whitespace-nowrap">
+                              {d.toLocaleTimeString()}
+                            </td>
+                            {selectedPairs.map(({ cat, sub }) => (
+                              <td key={makeKey(cat, sub)} className="px-4 py-2">
+                                {entry.data?.[cat]?.[sub] ?? "-"}
                               </td>
                             ))}
                           </tr>
@@ -375,7 +456,7 @@ export default function FileView() {
                     Previous
                   </button>
                   <span>
-                    Page {page} of {Math.ceil(totalCount / limit)}
+                    Page {page} of {Math.ceil((totalCount || 0) / limit) || 1}
                   </span>
                   <button
                     className="bg-gray-200 px-3 py-1 rounded disabled:opacity-50"
@@ -387,27 +468,27 @@ export default function FileView() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white rounded-xl shadow p-3 sm:p-4">
+              <div className="bg-white rounded-xl shadow p-3 sm:p-4 h-full flex flex-col">
                 <div className="flex items-start sm:items-center justify-between gap-3">
                   <h2 className="text-xl sm:text-2xl font-bold">Data Chart</h2>
-                  <button
-                    className=" text-primary"
-                    onClick={() => updateParams({ view: "table" })}
-                  >
+                  <button className="text-primary" onClick={() => updateParams({ view: "table" })}>
                     Switch To Table
                   </button>
                 </div>
 
                 <div className="mt-3">
-                  {selectedCategory && selectedSubcategories.length ? (
+                  {selectedPairs.length === 0 ? (
+                    <p className="text-gray-600">Select subcategories to view a chart.</p>
+                  ) : singleCategoryForChart ? (
                     <FileViewChart
                       data={filteredData}
-                      category={selectedCategory}
-                      subcategories={selectedSubcategories}
+                      category={singleCategoryForChart}
+                      subcategories={subcategoriesForChart}
                     />
                   ) : (
                     <p className="text-gray-600">
-                      No data to display. Select a category/subcategories.
+                      Chart supports one category at a time. Please select subcategories from the
+                      same category (or switch back to the table).
                     </p>
                   )}
                 </div>
