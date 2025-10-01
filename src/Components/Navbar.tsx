@@ -39,17 +39,17 @@ const Navbar: React.FC = () => {
   };
 
   return (
-    <nav className=" sticky top-0 z-50 bg-gradient-to-tr from-primary to-[#BFCBCE]">
+    <nav className=" sticky top-0 z-50 bg-gradient-to-tr from-[#001a33] to-[#02396c]">
       <div className="max-w-screen-xl mx-auto p-4 flex items-center justify-between">
 
         {/* LEFT - LOGO */}
-        <Link to="/" className='flex justify-center items-center gap-1' >
-        <img src={watticon} className='w-10' alt="" />
-         <span className="text-xl font-bold text-secondary dark:text-white">Watt Matrix</span> 
+        <Link to="/" className='flex justify-center items-center ' >
+        <img src={watticon} className='w-14' alt="" />
+         <span className="text-xl font-semibold font-sans text-white dark:text-white">Watt Matrix</span> 
         </Link>
 
         {/* DESKTOP MENU */}
-        <ul className="hidden md:flex items-center space-x-6 text-gray-900 dark:text-white font-medium">
+        <ul className="hidden md:flex items-center space-x-6 text-gray-200  font-medium">
           <li><Link to="/">Home</Link></li>
           <li className="relative" ref={ddRef}>
             <button
@@ -57,7 +57,7 @@ const Navbar: React.FC = () => {
               onClick={() => setOpen((o) => !o)}
               aria-haspopup="menu"
               aria-expanded={open}
-              className="flex items-center gap-1 rounded-xl px-2 py-2 text-gray-900 hover:bg-primary hover:text-secondary transition"
+              className="flex items-center gap-1 rounded-xl px-2 py-2 text-gray-200 hover:bg-[#02396c] hover:text-secondary transition"
             >
               Dropdown
               <svg
@@ -81,18 +81,18 @@ const Navbar: React.FC = () => {
               ].join(" ")}
             >
               <Link
-                to="/aboutus"
+              to={"/aboutus"}
                 role="menuitem"
                 onClick={() => setOpen(false)}
-                className="block px-4 py-2 text-primary hover:bg-primary hover:text-secondary"
+                className="block px-4 py-2 text-gray-200 bg-[#001a33] hover:bg-[#02396c] hover:text-secondary"
               >
                 About Us
               </Link>
               <Link
-                to="/contact"
+               to={"/contactus"}
                 role="menuitem"
                 onClick={() => setOpen(false)}
-                className="block px-4 py-2 text-primary hover:bg-primary hover:text-secondary"
+                className="block px-4 py-2  text-gray-200 bg-[#001a33] hover:bg-[#02396c] hover:text-secondary"
               >
                 Contact Us
               </Link>
@@ -100,7 +100,7 @@ const Navbar: React.FC = () => {
                 to="/termsandconditions"
                 role="menuitem"
                 onClick={() => setOpen(false)}
-                className="block px-4 py-2 text-primary hover:bg-primary hover:text-secondary"
+                className="block px-4 py-2  text-gray-200 bg-[#001a33] hover:bg-[#02396c] hover:text-secondary"
               >
                 Terms &amp; Conditions
               </Link>
@@ -108,7 +108,7 @@ const Navbar: React.FC = () => {
                 to="/privacy"
                 role="menuitem"
                 onClick={() => setOpen(false)}
-                className="block px-4 py-2 text-primary hover:bg-primary hover:text-secondary"
+                className="block px-4 py-2  text-gray-200 bg-[#001a33] hover:bg-[#02396c] hover:text-secondary"
               >
                 Privacy Policy
               </Link>
@@ -134,7 +134,7 @@ const Navbar: React.FC = () => {
         </ul>
 
         {/* DESKTOP RIGHT BUTTON */}
-        <div className="hidden md:block text-gray-900 dark:text-white font-medium">
+        <div className="hidden md:block text-gray-200  font-medium">
           {token ? (
             <button onClick={handleLogout} className="hover:text-red-600">
               Logout
@@ -149,7 +149,7 @@ const Navbar: React.FC = () => {
         {/* MOBILE MENU BUTTON */}
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="md:hidden text-gray-900 dark:text-white"
+          className="md:hidden text-gray-200 "
         >
           {isOpen ? <X size={28} /> : <Menu size={28} />}
         </button>
@@ -165,11 +165,11 @@ const Navbar: React.FC = () => {
 
       {/* MOBILE SIDEBAR */}
       <div
-        className={`fixed top-0 left-0 w-64 h-full bg-gradient-to-r from-[#BFCBCE] to-primary dark:bg-gray-800 shadow-lg p-6 flex flex-col space-y-4 z-50 transform transition-transform duration-500 ease-in-out ${
+        className={`fixed top-0 left-0 w-64 h-full bg-gradient-to-r  text-gray-200 bg-[#001a33] hover:bg-[#02396c] shadow-lg p-6 flex flex-col space-y-4 z-50 transform transition-transform duration-500 ease-in-out ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <h2 className="text-2xl text-primary font-bold mb-4">Menu</h2>
+        <h2 className="text-2xl text-gray-200 font-bold mb-4">Menu</h2>
         <Link to="/" onClick={() => setIsOpen(false)}>Home</Link>
         <Link to="/aboutus" onClick={() => setIsOpen(false)}>About Us</Link>
         <Link to="/contact" onClick={() => setIsOpen(false)}>Contact Us</Link>

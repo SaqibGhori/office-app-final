@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
-import MixChartHome from "../Components/MixChartHome";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState , useRef} from "react";
+// import MixChartHome from "../Components/MixChartHome";
+import { Link, useNavigate } from "react-router-dom";
 import { useSocket } from "../hooks/useSocket";
 import { api } from "../api";
 import { ToastContainer, toast } from "react-toastify";
+import AreaChart from "../Components/AreaChart";
+import BarChart from "../Components/BarChart";
 
 interface GlobalAlarm {
   _id?: string;
@@ -50,6 +52,9 @@ const Home = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
 
+      const [open, setOpen] = useState(false);
+      
+
   const [purchaseState, setPurchaseState] = useState<PurchaseState>("none");
   const [latestPurchase, setLatestPurchase] = useState<PurchaseLite | null>(null);
 
@@ -61,7 +66,7 @@ const Home = () => {
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
-console.log(activePlan,loading)
+  console.log(activePlan, loading)
   // -------------------- META LOAD (me + latest purchase any status) --------------------
   useEffect(() => {
     if (!token) return;
@@ -324,18 +329,398 @@ console.log(activePlan,loading)
 
   // -------------------- NORMAL DASHBOARD (paid or admin/superadmin) --------------------
   return (
-    <div className="mx-auto w-full min-h-screen bg-secondary px-3 sm:px-4 md:px-6 lg:px-8 py-4 pb-10">
-      <div className="flex flex-col md:flex-row gap-4 md:gap-6">
-        {/* LEFT: Main Content on mobile, but on desktop it appears on left (order-1) */}
-        <div className="order-2 md:order-2 w-full md:flex-1">
-          <div className="bg-white rounded-xl shadow-sm p-3 sm:p-4 mb-4 ">
-            <MixChartHome />
-          </div>
+    <div className="mx-auto w-full min-h-screen bg-[#001a33] px-3 sm:px-4 md:px-6 lg:px-8 py-4 pb-10">
+      <div className=" flex justify-between items-center ">
+        <div>
+          <h1 className="text-3xl text-white font-semibold">Energy Monitoring Dashboard</h1>
+          <div className="text-gray-500 font-semibold">Real-time . Historical . Predective</div>
+        </div>
+        <div>
+          <button className="relative" >
+                      <button
+                        type="button"
+                        onClick={() => setOpen((o) => !o)}
+                        aria-haspopup="menu"
+                        aria-expanded={open}
+                        className="flex items-center gap-1 rounded-xl px-2 py-2 text-gray-200 hover:bg-[#02396c] hover:text-secondary transition"
+                      >
+                        Dropdown
+                        <svg
+                          viewBox="0 0 24 24"
+                          className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`}
+                          aria-hidden="true"
+                        >
+                          <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" fill="none" />
+                        </svg>
+                      </button>
+          
+                      <div
+                        role="menu"
+                        className={[
+                          "absolute right-0 mt-2 w-56 origin-top-right rounded-xl border border-gray-200 bg-white shadow-xl",
+                          "transition transform",
+                          open
+                            ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
+                            : "opacity-0 scale-95 -translate-y-2 pointer-events-none",
+                          "z-50 overflow-hidden"
+                        ].join(" ")}
+                      >
+                        <Link
+                          to="/aboutus"
+                          role="menuitem"
+                          className="block px-4 py-2 text-gray-200 bg-[#001a33] hover:bg-[#02396c] hover:text-secondary"
+                        >
+                          About Us
+                        </Link>
+                        <Link
+                          to="/contact"
+                          role="menuitem"
+                          className="block px-4 py-2  text-gray-200 bg-[#001a33] hover:bg-[#02396c] hover:text-secondary"
+                        >
+                          Contact Us
+                        </Link>
+                        <Link
+                          to="/termsandconditions"
+                          role="menuitem"
+                          className="block px-4 py-2  text-gray-200 bg-[#001a33] hover:bg-[#02396c] hover:text-secondary"
+                        >
+                          Terms &amp; Conditions
+                        </Link>
+                        <Link
+                          to="/privacy"
+                          role="menuitem"
+                          className="block px-4 py-2  text-gray-200 bg-[#001a33] hover:bg-[#02396c] hover:text-secondary"
+                        >
+                          Privacy Policy
+                        </Link>
+                      </div>
+                    </button>
+          {/* <button className="text-gray-400 border border-gray-400 p-3 rounded-lg">24 hours</button> */}
+        </div>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4  mb-8 mt-4">
+        <div className=" px-2 py-4 rounded-md   bg-gradient-to-r from-[#001a33] to-[#02396c] shadow-md ">
+          <span className="text-gray-400 text-sm">Total Load</span>
+          <h2 className="text-2xl font-bold text-white">337.3KW</h2>
+          <span className="text-xs text-gray-400">Aggregated in real-time</span>
+        </div>
+        <div className=" px-2 py-4 rounded-md   bg-gradient-to-r from-[#001a33] to-[#02396c]  shadow-md ">
+          <span className="text-gray-400 text-sm">Peak Load</span>
+          <h2 className="text-2xl font-bold text-white">67KW</h2>
+          <span className="text-xs text-gray-400">Aggregated in real-time</span>
+        </div>
+        <div className=" px-2 py-4 rounded-md   bg-gradient-to-r from-[#001a33] to-[#02396c]  shadow-md ">
+          <span className="text-gray-400 text-sm">Avg Voltage</span>
+          <h2 className="text-2xl font-bold text-white">25KW</h2>
+          <span className="text-xs text-gray-400">Aggregated in real-time</span>
+        </div>
+        <div className=" px-2 py-4 rounded-md   bg-gradient-to-r from-[#001a33] to-[#02396c]  shadow-md ">
+          <span className="text-gray-400 text-sm">Avg Current</span>
+          <h2 className="text-2xl font-bold text-white">467.3KW</h2>
+          <span className="text-xs text-gray-400">Aggregated in real-time</span>
+        </div>
+        <div className=" px-2 py-4 rounded-md   bg-gradient-to-r from-[#001a33] to-[#02396c]  shadow-md ">
+          <span className="text-gray-400 text-sm">Total Load</span>
+          <h2 className="text-2xl font-bold text-white">37.3KW</h2>
+          <span className="text-xs text-gray-400">Aggregated in real-time</span>
+        </div>
+        <div className=" px-2 py-4 rounded-md   bg-gradient-to-r from-[#001a33] to-[#02396c] shadow-md ">
+          <span className="text-gray-400 text-sm">Peak Load</span>
+          <h2 className="text-2xl font-bold text-white">337.3KW</h2>
+          <span className="text-xs text-gray-400">Aggregated in real-time</span>
+        </div>
+      </div>
+      <div className="flex flex-col md:flex-row gap-4 md:gap-3">
+        {/* RIGHT: Sidebar (on desktop sits right; on mobile, appears above) */}
+        <aside className="order-1 md:order-1 w-full md:w-[28%] lg:w-[24%] xl:w-[20%]  ">
+          <div className="md:sticky md:top-4 bg-gradient-to-r from-[#001a33] to-[#02396c]  rounded-md px-1 shadow-md mb-3">
+            <div className="text-center">
+              <div className="flex justify-between items-end p-2">
+                <h2 className="text-xl text-white sm:text-2xl font-semibold  ">Devices</h2>
 
-          <div className="bg-white rounded-xl shadow-sm ">
+                <button
+                  className="  bg-primary text-white rounded-full p-1 hover:bg-blue-950  disabled:opacity-60"
+                  onClick={() => setShowModal(true)}
+                  disabled={me?.role === "user" && planLimit != null && remaining === 0}
+                  title={
+                    me?.role === "user" && planLimit != null && remaining === 0
+                      ? "Device limit reached"
+                      : "Add a new device"
+                  }
+                >
+                  ➕
+                </button>
+              </div>
+
+              {/* Usage chips */}
+              <div className="mt-3 grid grid-cols-3 gap-2 max-w-xs mx-auto text-xs sm:text-sm text-gray-200">
+                <div className="px-1 py-1 rounded  shadow text-center">
+                  <span>Used:</span> {used}
+                </div>
+                <div className="px-1 py-1 rounded  shadow text-center">
+                  <span>Limit:</span> {planLimit ?? "-"}
+                </div>
+                <div className="px-1 py-1 rounded  shadow text-center">
+                  <span>Remain:</span> {remaining ?? "-"}
+                </div>
+              </div>
+
+
+              <div className="flex my-3 items-center bg-gradient-to-tr from-[#001a33] to-[#02396c] rounded-lg  shadow-lg p-1">
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  className="flex-grow px-4 py-2 text-white placeholder-gray-300 bg-transparent border-none rounded-full focus:outline-none"
+                />
+                <button className="px-4 py-2 text-white font-semibold rounded-full hover:bg-white/20 transition">
+                  <svg xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    className="w-5 h-5">
+                    <path stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M21 21l-4.35-4.35m0 0A7.5 7.5 0 104.5 4.5a7.5 7.5 0 0012.15 12.15z" />
+                  </svg>
+                </button>
+              </div>
+
+            </div>
+
+            <div className="mt-2 max-h-[50vh] h-80  overflow-y-scroll scrollbar-hide">
+              {gateways.map((gateway) => (
+                <button
+                  key={gateway._id}
+                  onClick={() => handleSelectGateway(gateway.gatewayId)}
+                  className="w-full py-3 px-4 text-left text-xl text-gray-300 hover:bg-[#001a33] "
+                >
+                  <div className="font-semibold">{gateway.name}</div>
+                  {/* <div className="text-xs opacity-80">ID: {gateway.gatewayId}</div> */}
+                </button>
+
+              ))}
+
+            </div>
+
+          </div>
+          <div className="px-3 py-3 bg-gradient-to-r from-[#001a33] to-[#02396c]  rounded-md  shadow-md">
+            <h2 className="text-white text-2xl font-semibold">Alarms</h2>
+            <div className=" max-h-60 overflow-y-auto scrollbar-hide">
+              <table className="w-full border-collapse ">
+                <thead className="sticky top-0 bg-gradient-to-r from-[#001a33] to-[#02396c]  z-10">
+                  <tr className="text-left text-gray-500">
+                    <th className="py-2">Time</th>
+                    <th className="py-2">Source</th>
+                    <th className="py-2">Severity</th>
+                  </tr>
+                </thead>
+                <tbody className=" ">
+                  <tr className="border-b text-xs font-semibold text-gray-400">
+                    <td className="py-3">10:14</td>
+                    <td className="py-3">Boiler Room</td>
+                    <td className="py-3">
+                      <span className="px-3 py-1 text-xs font-medium text-yellow-100 bg-yellow-600 rounded-full">
+                        Warning
+                      </span>
+                    </td>
+                  </tr>
+
+                  <tr className="border-b text-xs font-semibold text-gray-400">
+                    <td className="py-3">10:14</td>
+                    <td className="py-3">Chiler</td>
+                    <td className="py-3">
+                      <span className="px-3 py-1 text-xs font-medium text-red-100 bg-red-800 rounded-full">
+                        Critical
+                      </span>
+                    </td>
+                  </tr>
+
+                  <tr className="border-b text-xs font-semibold text-gray-400">
+                    <td className="py-3">10:14</td>
+                    <td className="py-3">Main Plant A</td>
+                    <td className="py-3">
+                      <span className="px-3 py-1 text-xs font-medium text-green-100 bg-green-800 rounded-full">
+                        Normal
+                      </span>
+                    </td>
+                  </tr>
+                  <tr className="border-b text-xs font-semibold text-gray-400">
+                    <td className="py-3">10:14</td>
+                    <td className="py-3">Boiler Room</td>
+                    <td className="py-3">
+                      <span className="px-3 py-1 text-xs font-medium text-yellow-100 bg-yellow-600 rounded-full">
+                        Warning
+                      </span>
+                    </td>
+                  </tr>
+
+                  <tr className="border-b text-xs font-semibold text-gray-400">
+                    <td className="py-3">10:14</td>
+                    <td className="py-3">Chiler</td>
+                    <td className="py-3">
+                      <span className="px-3 py-1 text-xs font-medium text-red-100 bg-red-800 rounded-full">
+                        Critical
+                      </span>
+                    </td>
+                  </tr>
+
+                  <tr className="border-b text-xs font-semibold text-gray-400">
+                    <td className="py-3">10:14</td>
+                    <td className="py-3">Main Plant A</td>
+                    <td className="py-3">
+                      <span className="px-3 py-1 text-xs font-medium text-green-100 bg-green-800 rounded-full">
+                        Normal
+                      </span>
+                    </td>
+                  </tr>
+                  <tr className="border-b text-xs font-semibold text-gray-400">
+                    <td className="py-3">10:14</td>
+                    <td className="py-3">Boiler Room</td>
+                    <td className="py-3">
+                      <span className="px-3 py-1 text-xs font-medium text-yellow-100 bg-yellow-600 rounded-full">
+                        Warning
+                      </span>
+                    </td>
+                  </tr>
+
+                  <tr className="border-b text-xs font-semibold text-gray-400">
+                    <td className="py-3">10:14</td>
+                    <td className="py-3">Chiler</td>
+                    <td className="py-3">
+                      <span className="px-3 py-1 text-xs font-medium text-red-100 bg-red-800 rounded-full">
+                        Critical
+                      </span>
+                    </td>
+                  </tr>
+
+                  <tr className="border-b text-xs font-semibold text-gray-400">
+                    <td className="py-3">10:14</td>
+                    <td className="py-3">Main Plant A</td>
+                    <td className="py-3">
+                      <span className="px-3 py-1 text-xs font-medium text-green-100 bg-green-800 rounded-full">
+                        Normal
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </aside>
+
+        {/* LEFT: Main Content on mobile, but on desktop it appears on left (order-1) */}
+        <div className="order-2 md:order-2 w-full md:flex-1 bg-[#02396c]">
+          <div className=" p-6 rounded-xl">
+            <h2 className="text-lg font-semibold mb-4 text-white">System Topology</h2>
+            <div className="flex justify-center">
+              <svg width="100%" height="300" viewBox="0 0 600 300">
+                {/* Power Bus */}
+                <line
+                  x1="80"
+                  y1="150"
+                  x2="520"
+                  y2="150"
+                  stroke="#38bdf8"
+                  strokeWidth="4"
+                />
+                <rect
+                  x="270"
+                  y="135"
+                  width="70"
+                  height="25"
+                  rx="6"
+                  fill="#0B1B3A"
+                  stroke="#38bdf8"
+                  strokeWidth="2"
+                />
+                <text x="280" y="152" fill="white" fontSize="12">
+                  Power-Bus
+                </text>
+
+                {/* Grid */}
+                <line
+                  x1="140"
+                  y1="100"
+                  x2="140"
+                  y2="150"
+                  stroke="#38bdf8"
+                  strokeWidth="3"
+                />
+                <text x="115" y="85" fill="white" fontSize="14">⚡ Grid</text>
+                <text x="115" y="100" fill="#22c55e" fontSize="12">Connected</text>
+
+                {/* Solar */}
+                <line
+                  x1="305"
+                  y1="100"
+                  x2="305"
+                  y2="150"
+                  stroke="#38bdf8"
+                  strokeWidth="3"
+                />
+                <text x="285" y="85" fill="white" fontSize="14">☀ Solar</text>
+                <text x="290" y="100" fill="#facc15" fontSize="12">Active</text>
+
+                {/* Wind */}
+                <line
+                  x1="460"
+                  y1="100"
+                  x2="460"
+                  y2="150"
+                  stroke="#38bdf8"
+                  strokeWidth="3"
+                />
+                <text x="440" y="85" fill="white" fontSize="14">🌬 Wind</text>
+                <text x="445" y="100" fill="#3b82f6" fontSize="12">Active</text>
+
+                {/* Battery */}
+                <line
+                  x1="200"
+                  y1="150"
+                  x2="200"
+                  y2="210"
+                  stroke="#38bdf8"
+                  strokeWidth="3"
+                />
+                <text x="180" y="230" fill="white" fontSize="14">🔋 Battery</text>
+                <text x="185" y="245" fill="#a3e635" fontSize="12">82%</text>
+
+                {/* EV Charger */}
+                <line
+                  x1="305"
+                  y1="150"
+                  x2="305"
+                  y2="210"
+                  stroke="#38bdf8"
+                  strokeWidth="3"
+                />
+                <text x="260" y="230" fill="white" fontSize="14">🚗 EV Charger</text>
+                <text x="275" y="245" fill="#e11d48" fontSize="12">Running</text>
+
+                {/* Load */}
+                <line
+                  x1="410"
+                  y1="150"
+                  x2="410"
+                  y2="210"
+                  stroke="#38bdf8"
+                  strokeWidth="3"
+                />
+                <text x="390" y="230" fill="white" fontSize="14">⚡ Load</text>
+                <text x="380" y="245" fill="#f97316" fontSize="12">938 kW</text>
+              </svg>
+            </div>
+          </div>
+          {/* <div className="bg-white rounded-xl shadow-sm p-3 sm:p-4 mb-4 ">
+            <MixChartHome />
+          </div> */}
+
+          {/* table wrapper keeps it scrollable on small screens */}
+
+          {/* <div className="bg-white rounded-xl shadow-sm ">
             <h2 className="text-lg sm:text-xl font-bold p-3 sm:p-4">Live + Saved Alarms</h2>
 
-            {/* table wrapper keeps it scrollable on small screens */}
             <div className="px-3 sm:px-4 pb-4 max-h-[60vh] min-h-80 overflow-y-auto overflow-x-auto">
               <table className="min-w-full table-auto text-xs sm:text-sm">
                 <thead className="bg-gray-200 sticky top-0 z-10">
@@ -356,8 +741,8 @@ console.log(activePlan,loading)
                         alarm.priority === "High"
                           ? "bg-red-200"
                           : alarm.priority === "Normal"
-                          ? "bg-green-200"
-                          : "bg-blue-200"
+                            ? "bg-green-200"
+                            : "bg-blue-200"
                       }
                     >
                       <td className="px-3 py-2 font-semibold">{alarm.gatewayId}</td>
@@ -368,13 +753,12 @@ console.log(activePlan,loading)
                       <td className="px-3 py-2">{alarm.subcategory}</td>
                       <td className="px-3 py-2">{alarm.value}</td>
                       <td
-                        className={`px-3 py-2 font-semibold ${
-                          alarm.priority === "High"
-                            ? "text-red-600"
-                            : alarm.priority === "Normal"
+                        className={`px-3 py-2 font-semibold ${alarm.priority === "High"
+                          ? "text-red-600"
+                          : alarm.priority === "Normal"
                             ? "text-green-700"
                             : "text-blue-600"
-                        }`}
+                          }`}
                       >
                         {alarm.priority}
                       </td>
@@ -383,7 +767,6 @@ console.log(activePlan,loading)
                 </tbody>
               </table>
 
-              {/* pager */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-4 text-sm">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
@@ -402,58 +785,18 @@ console.log(activePlan,loading)
                 </button>
               </div>
             </div>
+          </div> */}
+        </div>
+
+        <div className="order-3 md:order-3  ">
+          <div className="rounded-md   bg-gradient-to-r from-[#02396c] to-[#001a33]  shadow-md mb-3">
+          <AreaChart/>
+          </div>
+          <div className="rounded-md   bg-gradient-to-r from-[#02396c] to-[#001a33]  shadow-md">
+          <BarChart/>
           </div>
         </div>
 
-        {/* RIGHT: Sidebar (on desktop sits right; on mobile, appears above) */}
-        <aside className="order-1 md:order-1 w-full md:w-[28%] lg:w-[24%] xl:w-[20%]">
-          <div className="md:sticky md:top-4">
-            <div className="text-center">
-              <h2 className="text-xl sm:text-2xl font-bold mt-2 md:mt-4">Devices</h2>
-
-              {/* Usage chips */}
-              <div className="mt-3 grid grid-cols-3 gap-2 max-w-xs mx-auto text-xs sm:text-sm">
-                <div className="px-1 py-1 rounded  shadow text-center">
-                  <b>Used:</b> {used}
-                </div>
-                <div className="px-1 py-1 rounded  shadow text-center">
-                  <b>Limit:</b> {planLimit ?? "-"}
-                </div>
-                <div className="px-1 py-1 rounded  shadow text-center">
-                  <b>Remain:</b> {remaining ?? "-"}
-                </div>
-              </div>
-
-              <button
-                className="py-2 px-5 sm:px-6 bg-primary text-white rounded hover:bg-blue-950 my-3 disabled:opacity-60"
-                onClick={() => setShowModal(true)}
-                disabled={me?.role === "user" && planLimit != null && remaining === 0}
-                title={
-                  me?.role === "user" && planLimit != null && remaining === 0
-                    ? "Device limit reached"
-                    : "Add a new device"
-                }
-              >
-                ➕ Add Device
-              </button>
-            </div>
-
-            <div className="mt-2 max-h-[50vh]  ">
-              {gateways.map((gateway) => (
-                <button
-                  key={gateway._id}
-                  onClick={() => handleSelectGateway(gateway.gatewayId)}
-                  className="w-full py-3 px-4 text-left  text-xl  text-primary hover:bg-gray-400 "
-                >
-                  <div className="font-bold">{gateway.name}</div>
-                  {/* <div className="text-xs opacity-80">ID: {gateway.gatewayId}</div> */}
-                </button>
-                
-              ))}
-            </div>
-
-          </div>
-        </aside>
       </div>
 
       {/* Modal */}
