@@ -1,4 +1,4 @@
-import  { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useData } from "../context/DataContext";
 import RealTimeCharts from "../Components/RealTImeCharts";
 import { useSocket } from "../hooks/useSocket";
@@ -28,34 +28,43 @@ export default function MainDashboard() {
     gatewayId,
     userId
   );
-console.log(reading , "mk")
+  console.log(reading, "mk")
 
   const selectedGateway = gateways?.find((g) => g.gatewayId === gatewayId);
-  const gatewayName = selectedGateway?.name || "Unknown";
+  const gatewayName = selectedGateway?.gatewayName || "Unknown";
   const gatewayLocation = selectedGateway?.location || "";
+  const inferUnit = (category: string, label: string) => {
+    const lowerCat = category.toLowerCase();
+    const lowerLabel = label.toLowerCase();
 
-  const inferUnitFromLabel = (label: string) => {
-    const lower = label.toLowerCase();
-    if (lower.includes("v")) return "volt";
-    if (lower.includes("i") || lower.includes("amp")) return "amp";
-    if (lower.includes("pf") || lower.includes("cos")) return "cos";
-    if (lower.includes("hz") || lower.includes("f")) return "Hz";
-    if (lower.includes("w")) return "Watt";
-    if (lower.includes("va")) return "VA";
+    // First check by label
+    if (lowerLabel.includes("v")) return "volt";
+    if (lowerLabel.includes("i") || lowerLabel.includes("amp")) return "amp";
+    if (lowerLabel.includes("pf") || lowerLabel.includes("cos")) return "cos";
+    if (lowerLabel.includes("hz") || lowerLabel.includes("f")) return "Hz";
+    if (lowerLabel.includes("w")) return "Watt";
+    if (lowerLabel.includes("va")) return "VA";
+
+    // Then fallback by category
+    if (lowerCat.includes("voltage")) return "volt";
+    if (lowerCat.includes("active power")) return "Watt";
+    if (lowerCat.includes("power factor")) return "cos";
+    if (lowerCat.includes("temperature")) return "°C";
+    if (lowerCat.includes("humidity")) return "%";
+
     return "";
   };
 
   const sections: Section[] = reading?.data
     ? Object.entries(reading.data).map(([category, subObj]) => ({
-        title: category,
-        values: Object.entries(subObj).map(([label, value]) => ({
-          label,
-          value,
-          unit: inferUnitFromLabel(label),
-        })),
-      }))
+      title: category,
+      values: Object.entries(subObj).map(([label, value]) => ({
+        label,
+        value,
+        unit: inferUnit(category, label),
+      })),
+    }))
     : [];
-
   useEffect(() => {
     if (reading && !selectedTitle) {
       const firstCat = Object.keys(reading.data)[0];
@@ -64,35 +73,41 @@ console.log(reading , "mk")
   }, [reading, selectedTitle]);
 
   return (
-    <div className="p-4">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
+    <div className="p-4 bg-[#001a33]">
+      <div className="">
         <div>
-          <h1 className="text-2xl font-bold">
-            {gatewayName}
-            <span className="text-sm text-gray-500 ml-2">({gatewayId})</span>
-          </h1>
+          <div className="flex items-baseline gap-2 ">
+            <span className="text-gray-200">Device Name: </span>
+            <h1 className=" text-xl text-gray-300 sm:text-gray-300 t-2xl font-semibold">
+              {gatewayName}
+              {/* <span className="text-sm text-gray-500 ml-2">({gatewayId})</span> */}
+            </h1>
+          </div>
           {gatewayLocation && (
-            <p className="text-sm text-gray-600">{gatewayLocation}</p>
+            
+            <div className="flex items-baseline gap-2">
+              <span className="text-gray-200">Device Location:</span> 
+              <h1 className="text-gray-300">{gatewayLocation}</h1>
+            </div>
           )}
         </div>
       </div>
 
       {/* Data Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5  my-5">
         {sections.length > 0 ? (
           sections.map((sec, idx) => (
             <div
               key={idx}
               onClick={() => setSelectedTitle(sec.title)}
-              className={`bg-white rounded-lg shadow p-4 cursor-pointer hover:shadow-md transition ${
-                selectedTitle === sec.title ? "border-2 border-blue-600" : ""
-              }`}
+              className={`rounded-md   bg-gradient-to-r from-[#001a33] to-[#02396c]  shadow-md p-4 cursor-pointer hover:shadow-md transition ${selectedTitle === sec.title ? "border-2 border-blue-600" : ""
+                }`}
             >
-              <h2 className="font-semibold mb-2">{sec.title}</h2>
+              <h2 className="font-semibold text-gray-400 mb-2">{sec.title}</h2>
               {sec.values.map((item, i) => (
                 <div key={i} className="flex justify-between">
-                  <span>{item.label}</span>
-                  <span className="font-mono">
+                  <span className="text-gray-300">{item.label}</span>
+                  <span className="font-mono text-gray-300">
                     {item.value} {item.unit}
                   </span>
                 </div>

@@ -56,39 +56,47 @@ const RealTimeCharts: React.FC<RealTimeChartProps> = ({ selectedTitle, gatewayId
     data,
   }));
 
-  const options: ApexCharts.ApexOptions = {
-    chart: {
-      type: "line",
-      height: 350,
-      animations: {
-        enabled: true,
-        dynamicAnimation: { speed: 500 },
-      },
-      toolbar: { show: false },
-      zoom: { enabled: false },
+ const options: ApexCharts.ApexOptions = {
+  chart: {
+    type: "line",
+    height: 350,
+    animations: {
+      enabled: true,
+      dynamicAnimation: { speed: 500 },
     },
-    xaxis: {
-      categories: timestamps,
-    },
-    stroke: {
-      curve: "smooth",
-      width: 2,
-    },
-    legend: {
-      position: "bottom",
-    },
-    title: {
-      text: selectedTitle || "Real-Time Chart",
-      align: "left",
-    },
-  };
+    toolbar: { show: false },
+    zoom: { enabled: false },
+    foreColor: "#fff",  // 👈 ye line add karo
+  },
+  xaxis: {
+    categories: timestamps,
+    labels: { style: { colors: "#fff" } },  // 👈 axis labels white
+  },
+  yaxis: {
+    labels: { style: { colors: "#fff" } },  // 👈 y-axis labels white
+  },
+  stroke: {
+    curve: "smooth",
+    width: 2,
+  },
+  legend: {
+    position: "bottom",
+    labels: { colors: "#fff" }, // 👈 legend text white
+  },
+  title: {
+    text: selectedTitle || "Real-Time Chart",
+    align: "left",
+    style: { color: "#fff" }, // 👈 title white
+  },
+};
+
 
   return (
-    <div className="p-4 bg-white shadow rounded">
+    <div className="p-4 bg-[#02396c] shadow-lg rounded text-white ">
       {series.some((s) => s.data.length > 0) ? (
         <Chart options={options} series={series} type="line" height={400} />
       ) : (
-        <p className="text-gray-500 text-sm">
+        <p className="text-white text-sm">
           Waiting for {selectedTitle || "data"}...
         </p>
       )}

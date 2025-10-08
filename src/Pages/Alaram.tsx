@@ -8,6 +8,7 @@ import { api } from "../api";
 interface AlarmItem {
   _id?: string;
   timestamp: string;
+  gatewayName:string;
   category: string;
   subcategory: string;
   value: number;
@@ -31,9 +32,8 @@ export default function AlarmPage() {
   const [isFilterActive, setIsFilterActive] = useState(false);
 
   const selectedGateway = gateways?.find((g) => g.gatewayId === gatewayId);
-  const gatewayName = selectedGateway?.name || "Unknown";
+  const gatewayName = selectedGateway?.gatewayName || "";
   const gatewayLocation = selectedGateway?.location || "";
-
   // 🚀 Fetch Alarms Function
   const fetchAlarms = () => {
     if (!gatewayId) return;
@@ -117,7 +117,7 @@ export default function AlarmPage() {
       <div className="flex justify-between items-center">
       <div>
           <h1 className="text-2xl font-bold">
-            {gatewayName}
+           {gatewayName}
             <span className="text-sm text-gray-500 ml-2">({gatewayId})</span>
           </h1>
           {gatewayLocation && (
@@ -193,6 +193,7 @@ export default function AlarmPage() {
             <table className="min-w-full table-fixed">
               <thead className="bg-gray-200 sticky top-0">
                 <tr>
+                  <th className="w-1/5 px-3 py-2 text-left">gateway</th>
                   <th className="w-1/5 px-3 py-2 text-left">Time</th>
                   <th className="w-1/5 px-3 py-2 text-left">Category</th>
                   <th className="w-1/5 px-3 py-2 text-left">Subcategory</th>
@@ -203,6 +204,7 @@ export default function AlarmPage() {
               <tbody className="divide-y divide-gray-200">
                 {alarms.map((a, i) => (
                   <tr key={a._id || i} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                    <td className="px-3 py-2">{a.gatewayName}</td>
                     <td className="px-3 py-2">{new Date(a.timestamp).toLocaleString()}</td>
                     <td className="px-3 py-2">{a.category}</td>
                     <td className="px-3 py-2">{a.subcategory}</td>

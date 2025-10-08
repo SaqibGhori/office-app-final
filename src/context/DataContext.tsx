@@ -13,6 +13,7 @@ type Reading = {
 type AlarmSetting = {
   _id?: string;
   gatewayId: string;
+  gatewayName:string;
   category: string;
   subcategory: string;
   high?: number;
@@ -23,7 +24,7 @@ type AlarmSetting = {
 
 type Gateway = {
   gatewayId: string;
-  name: string;
+  gatewayName: string;
   location: string;
 };
 
@@ -51,8 +52,14 @@ const DataContext = createContext<DataContextType | null>(null);
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { search } = useLocation();
   const gatewayId = new URLSearchParams(search).get("gateway") || "";
-
+  
+   
+  
   const [gateways, setGateways] = useState<Gateway[]>([]);
+  const selectedGateway = gateways?.find((g) => g.gatewayId === gatewayId);
+  const gatewayName = selectedGateway?.gatewayName || "unknown";
+  console.log(gatewayName , "asjj")
+  
   const [reading, setReading] = useState<Reading | null>(null);
   const [historicalData, setHistoricalData] = useState<Reading[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -162,6 +169,7 @@ useSocket((data: Reading) => {
           Object.keys(subObj as Record<string, number>).forEach((sub) => {
             defs.push({
               gatewayId,
+              gatewayName,
               category: cat,
               subcategory: sub,
               high: undefined,
@@ -183,7 +191,7 @@ useSocket((data: Reading) => {
     try {
       await api.post(
         "/api/alarm-settings",
-        { gatewayId, settings},
+        { gatewayId, gatewayName , settings},
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,

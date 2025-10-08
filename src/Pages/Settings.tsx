@@ -6,6 +6,7 @@ export default function Settings() {
   const {
     gatewayId,
     alarmSettings,
+    gateways,
     fetchAlarmSettings,
     saveAlarmSettings,
   } = useData();
@@ -13,7 +14,8 @@ export default function Settings() {
   const [localSettings, setLocalSettings] = useState(alarmSettings || []);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
-
+  const selectedGateway = gateways?.find((g) => g.gatewayId === gatewayId);
+  const gatewayName = selectedGateway?.gatewayName || "Unknown";
   // Load alarm settings from context
   useEffect(() => {
     const loadSettings = async () => {
@@ -66,7 +68,7 @@ export default function Settings() {
     <div className="p-4 w-full mx-auto">
      <h1 className="text-2xl font-bold ml-5">
    Alarm Settings for{' '}
-   {gatewayId}
+   {gatewayName}
    </h1>
       {localSettings.length > 0 ? (
         <button

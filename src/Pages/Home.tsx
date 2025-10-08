@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState , useRef} from "react";
+import { useEffect, useMemo, useState } from "react";
+
 // import MixChartHome from "../Components/MixChartHome";
 import { Link, useNavigate } from "react-router-dom";
 import { useSocket } from "../hooks/useSocket";
@@ -10,6 +11,7 @@ import BarChart from "../Components/BarChart";
 interface GlobalAlarm {
   _id?: string;
   gatewayId: string;
+  gatewayName:string;
   timestamp: string;
   category: string;
   subcategory: string;
@@ -19,7 +21,7 @@ interface GlobalAlarm {
 interface Gateway {
   _id: string;
   gatewayId: string;
-  name: string;
+  gatewayName: string;
   location: string;
 }
 interface MeUser {
@@ -51,9 +53,7 @@ const Home = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
-
-      const [open, setOpen] = useState(false);
-      
+  const [open, setOpen] = useState(false);
 
   const [purchaseState, setPurchaseState] = useState<PurchaseState>("none");
   const [latestPurchase, setLatestPurchase] = useState<PurchaseLite | null>(null);
@@ -132,6 +132,7 @@ const Home = () => {
             index ===
             self.findIndex(
               (a) =>
+                a.gatewayName === alarm.gatewayName &&
                 a.gatewayId === alarm.gatewayId &&
                 a.timestamp === alarm.timestamp &&
                 a.category === alarm.category &&
@@ -185,7 +186,7 @@ const Home = () => {
   // -------------------- Add Gateway Modal --------------------
   const [showModal, setShowModal] = useState(false);
   const [gatewayIdInput, setGatewayIdInput] = useState("");
-  const [name, setName] = useState("");
+  const [gatewayName, setGatewayName] = useState("");
   const [location, setLocation] = useState("");
   const [success, setSuccess] = useState(false);
 
@@ -207,14 +208,14 @@ const Home = () => {
     try {
       await api.post(
         "/api/gateway",
-        { gatewayId: gatewayIdInput, name, location },
+        { gatewayId: gatewayIdInput, gatewayName, location },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setSuccess(true);
       fetchGateways();
       setTimeout(() => {
         setShowModal(false);
-        setName("");
+        setGatewayName("");
         setLocation("");
         setSuccess(false);
       }, 1500);
@@ -337,64 +338,64 @@ const Home = () => {
         </div>
         <div>
           <button className="relative" >
-                      <button
-                        type="button"
-                        onClick={() => setOpen((o) => !o)}
-                        aria-haspopup="menu"
-                        aria-expanded={open}
-                        className="flex items-center gap-1 rounded-xl px-2 py-2 text-gray-200 hover:bg-[#02396c] hover:text-secondary transition"
-                      >
-                        Dropdown
-                        <svg
-                          viewBox="0 0 24 24"
-                          className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`}
-                          aria-hidden="true"
-                        >
-                          <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" fill="none" />
-                        </svg>
-                      </button>
-          
-                      <div
-                        role="menu"
-                        className={[
-                          "absolute right-0 mt-2 w-56 origin-top-right rounded-xl border border-gray-200 bg-white shadow-xl",
-                          "transition transform",
-                          open
-                            ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
-                            : "opacity-0 scale-95 -translate-y-2 pointer-events-none",
-                          "z-50 overflow-hidden"
-                        ].join(" ")}
-                      >
-                        <Link
-                          to="/aboutus"
-                          role="menuitem"
-                          className="block px-4 py-2 text-gray-200 bg-[#001a33] hover:bg-[#02396c] hover:text-secondary"
-                        >
-                          About Us
-                        </Link>
-                        <Link
-                          to="/contact"
-                          role="menuitem"
-                          className="block px-4 py-2  text-gray-200 bg-[#001a33] hover:bg-[#02396c] hover:text-secondary"
-                        >
-                          Contact Us
-                        </Link>
-                        <Link
-                          to="/termsandconditions"
-                          role="menuitem"
-                          className="block px-4 py-2  text-gray-200 bg-[#001a33] hover:bg-[#02396c] hover:text-secondary"
-                        >
-                          Terms &amp; Conditions
-                        </Link>
-                        <Link
-                          to="/privacy"
-                          role="menuitem"
-                          className="block px-4 py-2  text-gray-200 bg-[#001a33] hover:bg-[#02396c] hover:text-secondary"
-                        >
-                          Privacy Policy
-                        </Link>
-                      </div>
-                    </button>
+            <button
+              type="button"
+              onClick={() => setOpen((o) => !o)}
+              aria-haspopup="menu"
+              aria-expanded={open}
+              className="flex items-center gap-1 rounded-xl px-2 py-2 text-gray-200 hover:bg-[#02396c] hover:text-secondary transition"
+            >
+              Dropdown
+              <svg
+                viewBox="0 0 24 24"
+                className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`}
+                aria-hidden="true"
+              >
+                <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" fill="none" />
+              </svg>
+            </button>
+
+            <div
+              role="menu"
+              className={[
+                "absolute right-0 mt-2 w-56 origin-top-right rounded-xl border border-gray-200 bg-white shadow-xl",
+                "transition transform",
+                open
+                  ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
+                  : "opacity-0 scale-95 -translate-y-2 pointer-events-none",
+                "z-50 overflow-hidden"
+              ].join(" ")}
+            >
+              <Link
+                to="/aboutus"
+                role="menuitem"
+                className="block px-4 py-2 text-gray-200 bg-[#001a33] hover:bg-[#02396c] hover:text-secondary"
+              >
+                About Us
+              </Link>
+              <Link
+                to="/contact"
+                role="menuitem"
+                className="block px-4 py-2  text-gray-200 bg-[#001a33] hover:bg-[#02396c] hover:text-secondary"
+              >
+                Contact Us
+              </Link>
+              <Link
+                to="/termsandconditions"
+                role="menuitem"
+                className="block px-4 py-2  text-gray-200 bg-[#001a33] hover:bg-[#02396c] hover:text-secondary"
+              >
+                Terms &amp; Conditions
+              </Link>
+              <Link
+                to="/privacy"
+                role="menuitem"
+                className="block px-4 py-2  text-gray-200 bg-[#001a33] hover:bg-[#02396c] hover:text-secondary"
+              >
+                Privacy Policy
+              </Link>
+            </div>
+          </button>
           {/* <button className="text-gray-400 border border-gray-400 p-3 rounded-lg">24 hours</button> */}
         </div>
       </div>
@@ -488,14 +489,14 @@ const Home = () => {
 
             </div>
 
-            <div className="mt-2 max-h-[50vh] h-80  overflow-y-scroll scrollbar-hide">
+            <div className="mt-2 h-[94vh]  overflow-y-scroll scrollbar-hide">
               {gateways.map((gateway) => (
                 <button
                   key={gateway._id}
                   onClick={() => handleSelectGateway(gateway.gatewayId)}
                   className="w-full py-3 px-4 text-left text-xl text-gray-300 hover:bg-[#001a33] "
                 >
-                  <div className="font-semibold">{gateway.name}</div>
+                  <div className="font-semibold">{gateway.gatewayName}</div>
                   {/* <div className="text-xs opacity-80">ID: {gateway.gatewayId}</div> */}
                 </button>
 
@@ -504,114 +505,61 @@ const Home = () => {
             </div>
 
           </div>
-          <div className="px-3 py-3 bg-gradient-to-r from-[#001a33] to-[#02396c]  rounded-md  shadow-md">
+          {/* <div className="px-3 py-3 bg-gradient-to-r from-[#001a33] to-[#02396c]  rounded-md  shadow-md">
             <h2 className="text-white text-2xl font-semibold">Alarms</h2>
-            <div className=" max-h-60 overflow-y-auto scrollbar-hide">
-              <table className="w-full border-collapse ">
-                <thead className="sticky top-0 bg-gradient-to-r from-[#001a33] to-[#02396c]  z-10">
-                  <tr className="text-left text-gray-500">
+            <div className="px-3 sm:px-4 pb-4 max-h-[60vh] min-h-80 overflow-y-auto overflow-x-auto scrollbar-hide">
+              <table className="w-full border-collapse">
+                <thead className="sticky top-0 bg-gradient-to-r from-[#001a33] to-[#02396c] z-10">
+                  <tr className="text-left text-gray-400 text-xs sm:text-sm">
+                    <th className="py-2">Gateway</th>
                     <th className="py-2">Time</th>
-                    <th className="py-2">Source</th>
-                    <th className="py-2">Severity</th>
+                    <th className="py-2">Category</th>
+                    <th className="py-2">Subcategory</th>
+                    <th className="py-2">Value</th>
+                    <th className="py-2">Priority</th>
                   </tr>
                 </thead>
-                <tbody className=" ">
-                  <tr className="border-b text-xs font-semibold text-gray-400">
-                    <td className="py-3">10:14</td>
-                    <td className="py-3">Boiler Room</td>
-                    <td className="py-3">
-                      <span className="px-3 py-1 text-xs font-medium text-yellow-100 bg-yellow-600 rounded-full">
-                        Warning
-                      </span>
-                    </td>
-                  </tr>
-
-                  <tr className="border-b text-xs font-semibold text-gray-400">
-                    <td className="py-3">10:14</td>
-                    <td className="py-3">Chiler</td>
-                    <td className="py-3">
-                      <span className="px-3 py-1 text-xs font-medium text-red-100 bg-red-800 rounded-full">
-                        Critical
-                      </span>
-                    </td>
-                  </tr>
-
-                  <tr className="border-b text-xs font-semibold text-gray-400">
-                    <td className="py-3">10:14</td>
-                    <td className="py-3">Main Plant A</td>
-                    <td className="py-3">
-                      <span className="px-3 py-1 text-xs font-medium text-green-100 bg-green-800 rounded-full">
-                        Normal
-                      </span>
-                    </td>
-                  </tr>
-                  <tr className="border-b text-xs font-semibold text-gray-400">
-                    <td className="py-3">10:14</td>
-                    <td className="py-3">Boiler Room</td>
-                    <td className="py-3">
-                      <span className="px-3 py-1 text-xs font-medium text-yellow-100 bg-yellow-600 rounded-full">
-                        Warning
-                      </span>
-                    </td>
-                  </tr>
-
-                  <tr className="border-b text-xs font-semibold text-gray-400">
-                    <td className="py-3">10:14</td>
-                    <td className="py-3">Chiler</td>
-                    <td className="py-3">
-                      <span className="px-3 py-1 text-xs font-medium text-red-100 bg-red-800 rounded-full">
-                        Critical
-                      </span>
-                    </td>
-                  </tr>
-
-                  <tr className="border-b text-xs font-semibold text-gray-400">
-                    <td className="py-3">10:14</td>
-                    <td className="py-3">Main Plant A</td>
-                    <td className="py-3">
-                      <span className="px-3 py-1 text-xs font-medium text-green-100 bg-green-800 rounded-full">
-                        Normal
-                      </span>
-                    </td>
-                  </tr>
-                  <tr className="border-b text-xs font-semibold text-gray-400">
-                    <td className="py-3">10:14</td>
-                    <td className="py-3">Boiler Room</td>
-                    <td className="py-3">
-                      <span className="px-3 py-1 text-xs font-medium text-yellow-100 bg-yellow-600 rounded-full">
-                        Warning
-                      </span>
-                    </td>
-                  </tr>
-
-                  <tr className="border-b text-xs font-semibold text-gray-400">
-                    <td className="py-3">10:14</td>
-                    <td className="py-3">Chiler</td>
-                    <td className="py-3">
-                      <span className="px-3 py-1 text-xs font-medium text-red-100 bg-red-800 rounded-full">
-                        Critical
-                      </span>
-                    </td>
-                  </tr>
-
-                  <tr className="border-b text-xs font-semibold text-gray-400">
-                    <td className="py-3">10:14</td>
-                    <td className="py-3">Main Plant A</td>
-                    <td className="py-3">
-                      <span className="px-3 py-1 text-xs font-medium text-green-100 bg-green-800 rounded-full">
-                        Normal
-                      </span>
-                    </td>
-                  </tr>
+                <tbody className="divide-y divide-gray-700">
+                  {alarms.map((alarm, i) => (
+                    <tr
+                      key={`${alarm.timestamp}-${alarm.category}-${alarm.subcategory}-${i}`}
+                      className="text-xs sm:text-sm font-semibold text-gray-300"
+                    >
+                      <td className="py-3">{alarm.gatewayId}</td>
+                      <td className="py-3">
+                        {new Date(alarm.timestamp).toLocaleTimeString()}
+                      </td>
+                      <td className="py-3">{alarm.category}</td>
+                      <td className="py-3">{alarm.subcategory}</td>
+                      <td className="py-3">{alarm.value}</td>
+                      <td className="py-3">
+                        {alarm.priority === "High" && (
+                          <span className="px-3 py-1 text-xs font-medium text-red-100 bg-red-800 rounded-full">
+                            Critical
+                          </span>
+                        )}
+                        {alarm.priority === "Normal" && (
+                          <span className="px-3 py-1 text-xs font-medium text-green-100 bg-green-800 rounded-full">
+                            Normal
+                          </span>
+                        )}
+                        {alarm.priority === "Low" && (
+                          <span className="px-3 py-1 text-xs font-medium text-yellow-100 bg-yellow-600 rounded-full">
+                            Warning
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
-          </div>
+          </div> */}
         </aside>
 
         {/* LEFT: Main Content on mobile, but on desktop it appears on left (order-1) */}
-        <div className="order-2 md:order-2 w-full md:flex-1 bg-[#02396c]">
-          <div className=" p-6 rounded-xl">
+        <div className="order-2 md:order-2 w-full md:flex-1  ">
+          <div className=" p-6 rounded-md  bg-[#02396c] mb-3">
             <h2 className="text-lg font-semibold mb-4 text-white">System Topology</h2>
             <div className="flex justify-center">
               <svg width="100%" height="300" viewBox="0 0 600 300">
@@ -712,6 +660,75 @@ const Home = () => {
               </svg>
             </div>
           </div>
+
+          <div className="px-3 py-3 bg-[#02396c]  rounded-md  shadow-md " >
+            <h2 className="text-white text-2xl font-semibold">Alarms</h2>
+            <div className="px-3 sm:px-4 pb-4 max-h-[40vh] min-h-72 overflow-y-auto overflow-x-auto scrollbar-hide">
+              <table className="w-full border-collapse">
+                <thead className="sticky top-0 bg-gradient-to-r  bg-[#02396c] z-10">
+                  <tr className="text-left text-gray-400 text-xs sm:text-sm">
+                    <th className="py-2">Gateway</th>
+                    <th className="py-2">Time</th>
+                    <th className="py-2">Category</th>
+                    <th className="py-2">Subcategory</th>
+                    <th className="py-2">Value</th>
+                    <th className="py-2">Priority</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-700">
+                  {alarms.map((alarm, i) => (
+                    <tr
+                      key={`${alarm.gatewayName}-${alarm.timestamp}-${alarm.category}-${alarm.subcategory}-${i}`}
+                      className="text-xs sm:text-sm font-semibold text-gray-300"
+                    >
+                      <td className="py-3">{alarm.gatewayName}</td>
+                      <td className="py-3">
+                        {new Date(alarm.timestamp).toLocaleTimeString()}
+                      </td>
+                      <td className="py-3">{alarm.category}</td>
+                      <td className="py-3">{alarm.subcategory}</td>
+                      <td className="py-3">{alarm.value}</td>
+                      <td className="py-3">
+                        {alarm.priority === "High" && (
+                          <span className="px-3 py-1 text-xs font-medium text-red-100 bg-red-800 rounded-full">
+                            Critical
+                          </span>
+                        )}
+                        {alarm.priority === "Normal" && (
+                          <span className="px-3 py-1 text-xs font-medium text-green-100 bg-green-800 rounded-full">
+                            Normal
+                          </span>
+                        )}
+                        {alarm.priority === "Low" && (
+                          <span className="px-3 py-1 text-xs font-medium text-yellow-100 bg-yellow-600 rounded-full">
+                            Warning
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+               
+            </div>
+             <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-2 text-sm">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-3 py-1 rounded border bg-[#001a33] text-gray-300 disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <span className="text-gray-300">Page {page} of {totalPages}</span>
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-3 py-1 rounded border bg-[#001a33] text-gray-300 disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+          </div>
           {/* <div className="bg-white rounded-xl shadow-sm p-3 sm:p-4 mb-4 ">
             <MixChartHome />
           </div> */}
@@ -788,12 +805,12 @@ const Home = () => {
           </div> */}
         </div>
 
-        <div className="order-3 md:order-3  ">
-          <div className="rounded-md   bg-gradient-to-r from-[#02396c] to-[#001a33]  shadow-md mb-3">
-          <AreaChart/>
+        <div className="order-3 md:order-3 lg:w-[28%] md:w-[35%] sm:w-[100%]  ">
+          <div className="rounded-md   bg-gradient-to-r from-[#02396c] to-[#001a33]  shadow-md mb-3 ">
+            <AreaChart />
           </div>
           <div className="rounded-md   bg-gradient-to-r from-[#02396c] to-[#001a33]  shadow-md">
-          <BarChart/>
+            <BarChart />
           </div>
         </div>
 
@@ -824,8 +841,8 @@ const Home = () => {
                   <label className="block font-medium">Name</label>
                   <input
                     type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    value={gatewayName}
+                    onChange={(e) => setGatewayName(e.target.value)}
                     required
                     className="w-full border p-2 rounded"
                   />

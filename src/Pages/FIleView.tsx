@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import FileViewChart from "../Components/FileViewChart";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -14,7 +14,6 @@ interface Reading {
   timestamp: string;
   data: ReadingData;
 }
-
 // ---- Helpers for encoding/decoding selected pairs in URL ----
 const makeKey = (cat: string, sub: string) => `${cat}|${sub}`;
 const splitKey = (key: string): { cat: string; sub: string } | null => {
@@ -29,13 +28,16 @@ const splitKey = (key: string): { cat: string; sub: string } | null => {
 export default function FileView() {
   const [allData, setAllData] = useState<Reading[]>([]);
   const [filteredData, setFilteredData] = useState<Reading[]>([]);
-  const { gateways } = useData();
+  const { gateways, gatewayId } = useData();
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-
-  const { gatewayId } = useParams();
+  const selectedGatewayName = gateways?.find((g) => g.gatewayId === gatewayId);
+  const gatewayName = selectedGatewayName?.gatewayName || "";
+  const gatewayLocation = selectedGatewayName?.location || "";
+  // const { gatewayId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+
 
   const selectedGateway = searchParams.get("gateway") || "";
   // NEW: multi-category subcategory selection via "pairs"
@@ -43,6 +45,8 @@ export default function FileView() {
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
+
+
 
   // Derived parsed pairs (stable memo)
   const selectedPairs = useMemo(
@@ -56,12 +60,11 @@ export default function FileView() {
   const switchToChart = searchParams.get("view") || "table";
   const page = parseInt(searchParams.get("page") || "1", 10);
   const limit = 50;
-
   const [localStartDate, setLocalStartDate] = useState(startDate);
   const [localEndDate, setLocalEndDate] = useState(endDate);
   const [localInterval, setLocalInterval] = useState(secInterval);
-
   const isFilterValid = (localStartDate && localEndDate) || localInterval > 0;
+
 
   const updateParams = (changes: Record<string, string | null>) => {
     const updated = new URLSearchParams(searchParams.toString());
@@ -225,29 +228,46 @@ export default function FileView() {
   };
 
   // ---- Chart support (only when all pairs belong to one category) ----
-  const singleCategoryForChart = useMemo(() => {
-    if (selectedPairs.length === 0) return null;
-    const cats = new Set(selectedPairs.map((p) => p.cat));
-    return cats.size === 1 ? selectedPairs[0].cat : null;
-  }, [selectedPairs]);
+  // const singleCategoryForChart = useMemo(() => {
+  //   if (selectedPairs.length === 0) return null;
+  //   const cats = new Set(selectedPairs.map((p) => p.cat));
+  //   return cats.size === 1 ? selectedPairs[0].cat : null;
+  // }, [selectedPairs]);
 
-  const subcategoriesForChart = useMemo(() => {
-    if (!singleCategoryForChart) return [];
-    return selectedPairs.filter((p) => p.cat === singleCategoryForChart).map((p) => p.sub);
-  }, [selectedPairs, singleCategoryForChart]);
+  // const subcategoriesForChart = useMemo(() => {
+  //   if (!singleCategoryForChart) return [];
+  //   return selectedPairs.filter((p) => p.cat === singleCategoryForChart).map((p) => p.sub);
+  // }, [selectedPairs, singleCategoryForChart]);
 
   return (
-    <div className="mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4">
+    <div className="mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 bg-[#001a33]">
       <ToastContainer />
-      <h1 className="text-2xl sm:text-3xl font-bold">File View</h1>
+      {/* <h1 className="text-2xl sm:text-3xl font-bold">File View </h1> */}
+      <div className="">
+        <div>
+          <div className="flex items-baseline gap-2 ">
+            <span className="text-gray-200">Device Name: </span>
+            <h1 className=" text-xl text-gray-300 sm:text-gray-300 t-2xl font-semibold">
+              {gatewayName}
+              {/* <span className="text-sm text-gray-500 ml-2">({gatewayId})</span> */}
+            </h1>
+          </div>
+          {gatewayLocation && (
 
+            <div className="flex items-baseline gap-2">
+              <span className="text-gray-200">Device Location:</span>
+              <h1 className="text-gray-300">{gatewayLocation}</h1>
+            </div>
+          )}
+        </div>
+      </div>
       {/* Filters */}
-      <div className="mt-6 sm:mt-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 bg-white rounded-xl shadow p-3 sm:p-4">
-          <div className="font-semibold text-gray-700">Select Range</div>
+      <div className="mt-6 sm:mt-8 ">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 bg-gradient-to-r from-[#001a33] to-[#02396c]  shadow-md  rounded-md p-3 sm:p-4">
+          <div className="font-semibold text-gray-200">Select Range</div>
 
           <label className="flex flex-col sm:flex-row sm:items-center gap-1 text-sm">
-            <span className="sm:w-14">From</span>
+            <span className="sm:w-14 text-gray-200">From</span>
             <input
               type="datetime-local"
               value={localStartDate}
@@ -257,7 +277,7 @@ export default function FileView() {
           </label>
 
           <label className="flex flex-col sm:flex-row sm:items-center gap-1 text-sm">
-            <span className="sm:w-14">To</span>
+            <span className="sm:w-14 text-gray-200">To</span>
             <input
               type="datetime-local"
               value={localEndDate}
@@ -268,7 +288,7 @@ export default function FileView() {
           </label>
 
           <label className="flex flex-col sm:flex-row sm:items-center gap-1 text-sm">
-            <span className="sm:whitespace-nowrap">Seconds interval</span>
+            <span className="sm:whitespace-nowrap text-gray-200">Seconds interval</span>
             <input
               type="number"
               min="1"
@@ -281,9 +301,8 @@ export default function FileView() {
 
           <div className="flex items-end sm:items-center sm:justify-end">
             <button
-              className={`w-full sm:w-auto px-4 py-2 rounded text-white ${
-                isFilterValid ? "bg-blue-600" : "bg-gray-400 cursor-not-allowed"
-              }`}
+              className={`w-full sm:w-auto px-4 py-2 rounded text-white ${isFilterValid ? "bg-blue-600" : "bg-gray-400 cursor-not-allowed"
+                }`}
               onClick={handleFilter}
               disabled={!isFilterValid}
             >
@@ -296,15 +315,14 @@ export default function FileView() {
       {/* Content (Equal-height layout on desktop) */}
       <div
         className="
-          mt-6 md:mt-8
-          grid grid-cols-1 md:grid-cols-[minmax(16rem,20rem)_1fr]
-          gap-4 md:gap-6 items-stretch
+          mt-6 md:mt-8 w-[100%] lg:flex md:flex sm:block
+           md:gap-6 items-stretch
         "
       >
         {/* Sidebar */}
         <aside
           className="
-            bg-gray-800 text-white rounded-xl md:rounded-xl
+           rounded-md sm:mb-4 lg:w-[25%] md:w-[35%] sm:w-[100%] py-5 bg-gradient-to-r from-[#001a33] to-[#02396c]  shadow-md text-gray-200 
             p-4 h-full
             flex flex-col
           "
@@ -319,7 +337,7 @@ export default function FileView() {
             </option>
             {gateways.map((g) => (
               <option key={g.gatewayId} value={g.gatewayId}>
-                {g.name} ({g.gatewayId})
+                {g.gatewayName} ({g.gatewayId})
               </option>
             ))}
           </select>
@@ -377,12 +395,12 @@ export default function FileView() {
         </aside>
 
         {/* Main */}
-        <main className="h-full">
+        <main className="h-full  lg:w-[73%] md:w-[60%] sm:w-[100%] w-[100%]">
           {isLoading ? (
             <div className="text-center text-gray-500 text-lg py-10">Loading data...</div>
           ) : selectedGateway ? (
             switchToChart === "table" ? (
-              <div className="bg-white rounded-xl shadow p-3 sm:p-4 h-full flex flex-col">
+              <div className="bg-white rounded shadow p-3 sm:p-4 h-full  flex flex-col">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <h2 className="text-xl sm:text-2xl font-bold">Data Table</h2>
                   <div className="flex flex-col sm:flex-row gap-2 sm:items-center w-full sm:w-auto">
@@ -398,45 +416,54 @@ export default function FileView() {
                     >
                       Switch To Chart
                     </button>
-                    {/* <button
+                    <button
                       onClick={() => navigate(`/fileview/export?${searchParams.toString()}`)}
                       className="bg-green-600 text-white px-3 py-2 rounded"
                     >
                       Export File
-                    </button> */}
+                    </button>
                   </div>
                 </div>
 
-                <div className="mt-3 overflow-x-auto">
-                  <table className="min-w-full bg-white rounded">
-                    <thead>
-                      <tr className="bg-gray-200">
-                        <th className="px-4 py-2 text-left whitespace-nowrap">Date</th>
-                        <th className="px-4 py-2 text-left whitespace-nowrap">Time</th>
+                <div className="mt-3 overflow-scroll max-h-[40rem]">
+
+                  <table className=" bg-white rounded text-sm">
+                    <thead className="sticky top-0 gap-4 bg-gray-200 z-10 text-gray-700">
+                      <tr>
+                        <th className="px-4 py-2 text-left">Date</th>
+                        <th className="px-4 py-2 text-left">Time</th>
                         {selectedPairs.map(({ cat, sub }) => (
                           <th
                             key={makeKey(cat, sub)}
-                            className="px-4 py-2 text-left whitespace-nowrap"
+                            className="px-4 py-2 text-left max-w-[200px] truncate"
                             title={`${sub} (${cat})`}
                           >
-                            {sub} <span className="text-gray-600 text-xs">({cat})</span>
+                            {sub}{" "}
+                            <span className="text-gray-600 text-xs">({cat})</span>
                           </th>
                         ))}
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody >
                       {filteredData.map((entry, i) => {
                         const d = new Date(entry.timestamp);
                         return (
-                          <tr key={i} className="border-t">
+                          <tr key={i} className="border-t hover:bg-gray-50">
+                            <td className="px-4 py-2">{d.toLocaleDateString()}</td>
                             <td className="px-4 py-2 whitespace-nowrap">
-                              {d.toLocaleDateString()}
-                            </td>
-                            <td className="px-4 py-2 whitespace-nowrap">
-                              {d.toLocaleTimeString()}
+                              {d.toLocaleTimeString("en-US", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                second: "2-digit",
+                                hour12: true,
+                              })}
                             </td>
                             {selectedPairs.map(({ cat, sub }) => (
-                              <td key={makeKey(cat, sub)} className="px-4 py-2">
+                              <td
+                                key={makeKey(cat, sub)}
+                                className="px-4 py-2 max-w-[200px] truncate"
+                                title={String(entry.data?.[cat]?.[sub] ?? "-")}
+                              >
                                 {entry.data?.[cat]?.[sub] ?? "-"}
                               </td>
                             ))}
@@ -445,7 +472,11 @@ export default function FileView() {
                       })}
                     </tbody>
                   </table>
+
                 </div>
+
+
+
 
                 <div className="flex flex-col sm:flex-row items-center justify-end gap-2 mt-4 text-sm">
                   <button
@@ -479,19 +510,14 @@ export default function FileView() {
                 <div className="mt-3">
                   {selectedPairs.length === 0 ? (
                     <p className="text-gray-600">Select subcategories to view a chart.</p>
-                  ) : singleCategoryForChart ? (
+                  ) : (
                     <FileViewChart
                       data={filteredData}
-                      category={singleCategoryForChart}
-                      subcategories={subcategoriesForChart}
+                      pairs={selectedPairs}   // ✅ ab direct pairs bhej rahe hain
                     />
-                  ) : (
-                    <p className="text-gray-600">
-                      Chart supports one category at a time. Please select subcategories from the
-                      same category (or switch back to the table).
-                    </p>
                   )}
                 </div>
+
               </div>
             )
           ) : (

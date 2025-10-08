@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 type Gateway = {
   _id: string;
   gatewayId: string;
-  name: string;
+  gatewayName: string;
   location: string;
 };
 
@@ -13,7 +13,7 @@ export default function DeviceSettings() {
   const [items, setItems] = useState<Gateway[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [draft, setDraft] = useState<{ name: string; location: string }>({ name: "", location: "" });
+  const [draft, setDraft] = useState<{ gatewayName: string; location: string }>({ gatewayName: "", location: "" });
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const token = useMemo(() => localStorage.getItem("token"), []);
@@ -39,19 +39,19 @@ export default function DeviceSettings() {
 
   const startEdit = (g: Gateway) => {
     setEditingId(g._id);
-    setDraft({ name: g.name ?? "", location: g.location ?? "" });
+    setDraft({ gatewayName: g.gatewayName ?? "", location: g.location ?? "" });
   };
 
   const cancelEdit = () => {
     setEditingId(null);
-    setDraft({ name: "", location: "" });
+    setDraft({ gatewayName: "", location: "" });
   };
 
   const save = async (id: string) => {
     try {
       setBusyId(id);
       const payload: any = {};
-      if (draft.name?.trim()) payload.name = draft.name.trim();
+      if (draft.gatewayName?.trim()) payload.name = draft.gatewayName.trim();
       if (draft.location?.trim()) payload.location = draft.location.trim();
 
       if (!payload.name && !payload.location) {
@@ -123,11 +123,11 @@ export default function DeviceSettings() {
                       {isEditing ? (
                         <input
                           className="border rounded px-2 py-1 w-64"
-                          value={draft.name}
+                          value={draft.gatewayName}
                           onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
                         />
                       ) : (
-                        g.name
+                        g.gatewayName
                       )}
                     </td>
                     <td className="p-3">

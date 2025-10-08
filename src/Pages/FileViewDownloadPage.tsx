@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-// import axios from "axios";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { api } from "../api";
@@ -15,6 +14,11 @@ interface Reading {
   data: ReadingData;
 }
 
+interface Pair {
+  cat: string;
+  sub: string;
+}
+
 export default function FileExportPage() {
   const [searchParams] = useSearchParams();
   const [data, setData] = useState<Reading[]>([]);
@@ -25,11 +29,19 @@ export default function FileExportPage() {
   const navigate = useNavigate();
 
   const gatewayId = searchParams.get("gateway");
-  const category = searchParams.get("category");
-  const subs = searchParams.get("subs")?.split(",") || [];
   const startDate = searchParams.get("startDate");
   const endDate = searchParams.get("endDate");
   const interval = searchParams.get("secInterval");
+
+  // ✅ parse pairs from URL
+  const pairsParam = searchParams.get("pairs") || "";
+  const pairs: Pair[] = pairsParam
+    .split(",")
+    .map((s) => {
+      const [cat, sub] = s.split("|");
+      return { cat, sub };
+    })
+    .filter((p) => p.cat && p.sub);
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -43,12 +55,12 @@ export default function FileExportPage() {
         if (interval) params.interval = interval;
 
         const res = await api.get("/api/readingsdynamic", {
-      params,
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token") || ""}`, // ✅ fallback
-      },
-    })
-        setData(res.data.data);
+          params,
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          },
+        });
+        setData(res.data.data || []);
       } catch (err) {
         console.error(err);
       } finally {
@@ -64,13 +76,16 @@ export default function FileExportPage() {
 
     try {
       if (fileType === "csv") {
-        let csv = "Date,Time," + subs.join(",") + "\n";
+        let headers =
+          "Date,Time," + pairs.map((p) => `${p.sub} (${p.cat})`).join(",") + "\n";
+        let csv = headers;
+
         data.forEach((entry) => {
           const d = new Date(entry.timestamp);
           const row = [
             d.toLocaleDateString(),
             d.toLocaleTimeString(),
-            ...subs.map((s) => entry.data[category!]?.[s] ?? "-"),
+            ...pairs.map((p) => entry.data[p.cat]?.[p.sub] ?? "-"),
           ];
           csv += row.join(",") + "\n";
         });
@@ -89,12 +104,12 @@ export default function FileExportPage() {
           return [
             d.toLocaleDateString(),
             d.toLocaleTimeString(),
-            ...subs.map((s) => entry.data[category!]?.[s] ?? "-"),
+            ...pairs.map((p) => entry.data[p.cat]?.[p.sub] ?? "-"),
           ];
         });
 
         autoTable(doc, {
-          head: [["Date", "Time", ...subs]],
+          head: [["Date", "Time", ...pairs.map((p) => `${p.sub} (${p.cat})`)]],
           body: rows,
           styles: { fontSize: 8 },
         });
@@ -136,20 +151,22 @@ export default function FileExportPage() {
           <button
             onClick={downloadFile}
             disabled={downloading}
-            className={`px-4 py-2 rounded text-white ${downloading ? "bg-gray-400" : "bg-blue-600"}`}
+            className={`px-4 py-2 rounded text-white ${
+              downloading ? "bg-gray-400" : "bg-blue-600"
+            }`}
           >
             {downloading ? "Downloading..." : "Download"}
           </button>
 
           {/* Data Table */}
-          <table className="w-full border mt-6">
+          <table className="w-full border mt-6 text-sm">
             <thead>
               <tr className="bg-gray-200">
                 <th className="border px-2 py-1">Date</th>
                 <th className="border px-2 py-1">Time</th>
-                {subs.map((s) => (
-                  <th key={s} className="border px-2 py-1">
-                    {s}
+                {pairs.map((p) => (
+                  <th key={`${p.cat}|${p.sub}`} className="border px-2 py-1">
+                    {p.sub} <span className="text-gray-500 text-xs">({p.cat})</span>
                   </th>
                 ))}
               </tr>
@@ -160,10 +177,17 @@ export default function FileExportPage() {
                 return (
                   <tr key={i}>
                     <td className="border px-2 py-1">{d.toLocaleDateString()}</td>
-                    <td className="border px-2 py-1">{d.toLocaleTimeString()}</td>
-                    {subs.map((s) => (
-                      <td key={s} className="border px-2 py-1">
-                        {entry.data[category!]?.[s] ?? "-"}
+                    <td className="px-4 py-2 whitespace-nowrap">
+                              {d.toLocaleTimeString("en-US", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                second: "2-digit",
+                                hour12: true,
+                              })}
+                            </td>
+                    {pairs.map((p) => (
+                      <td key={`${p.cat}|${p.sub}`} className="border px-2 py-1">
+                        {entry.data[p.cat]?.[p.sub] ?? "-"}
                       </td>
                     ))}
                   </tr>
