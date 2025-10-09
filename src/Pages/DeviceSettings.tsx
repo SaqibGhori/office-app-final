@@ -93,8 +93,8 @@ export default function DeviceSettings() {
 // import React from 'react'
 
   return (
-    <div className="p-4 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-semibold mb-4">Device Settings</h1>
+    <div className="p-4 w-full mx-auto bg-[#001a33] h-[100vh]">
+      <h1 className="text-2xl font-semibold mb-4 text-gray-300">Device Settings</h1>
 
       {loading ? (
         <div className="animate-pulse p-4 bg-gray-100 rounded">Loading gateways…</div>
@@ -113,7 +113,7 @@ export default function DeviceSettings() {
                 <th className="p-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="text-gray-200">
               {items.map((g) => {
                 const isEditing = editingId === g._id;
                 return (
