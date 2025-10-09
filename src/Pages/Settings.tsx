@@ -14,8 +14,9 @@ export default function Settings() {
   const [localSettings, setLocalSettings] = useState(alarmSettings || []);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
-  const selectedGateway = gateways?.find((g) => g.gatewayId === gatewayId);
-  const gatewayName = selectedGateway?.gatewayName || "Unknown";
+  const selectedGatewayName = gateways?.find((g) => g.gatewayId === gatewayId);
+  const gatewayName = selectedGatewayName?.gatewayName || "";
+  const gatewayLocation = selectedGatewayName?.location || "";
   // Load alarm settings from context
   useEffect(() => {
     const loadSettings = async () => {
@@ -65,20 +66,32 @@ export default function Settings() {
   if (loading) return <p>Loading…</p>;
 
   return (
-    <div className="p-4 w-full mx-auto">
-     <h1 className="text-2xl font-bold ml-5">
-   Alarm Settings for{' '}
-   {gatewayName}
-   </h1>
+    <div className="p-4 w-full mx-auto bg-[#001a33]">
+      <div>
+        <div className="flex items-baseline gap-2 ">
+          <span className="text-gray-200">Device Name: </span>
+          <h1 className=" text-xl text-gray-300 sm:text-gray-300 t-2xl font-semibold">
+            {gatewayName}
+            {/* <span className="text-sm text-gray-500 ml-2">({gatewayId})</span> */}
+          </h1>
+        </div>
+        {gatewayLocation && (
+
+          <div className="flex items-baseline gap-2">
+            <span className="text-gray-200">Device Location:</span>
+            <h1 className="text-gray-300">{gatewayLocation}</h1>
+          </div>
+        )}
+      </div>
       {localSettings.length > 0 ? (
         <button
           onClick={() => {
             if (editMode) handleSave();
             else setEditMode(true);
           }}
-          className={`px-4 py-2 rounded ${editMode
+          className={`px-6 py-2 my-3  rounded ${editMode
             ? "bg-green-600 text-white"
-            : "bg-blue-600 text-white"
+            : "px-8 py-2   bg-[#02396c] text-gray-200 rounded"
             }`}
         >
           {editMode ? "Save" : "Edit"}
@@ -92,7 +105,7 @@ export default function Settings() {
         </button>
       )}
 
-      <div className="space-y-4 mt-6">
+      <div className="space-y-4 mt-2">
         {localSettings.map((s, i) => (
           <div
             key={`${s.category}-${s.subcategory}-${i}`}

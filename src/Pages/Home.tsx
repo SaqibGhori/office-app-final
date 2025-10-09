@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 // import MixChartHome from "../Components/MixChartHome";
-import { Link, useNavigate } from "react-router-dom";
+import {  useNavigate } from "react-router-dom";
 import { useSocket } from "../hooks/useSocket";
 import { api } from "../api";
 import { ToastContainer, toast } from "react-toastify";
@@ -366,34 +366,25 @@ const Home = () => {
                 "z-50 overflow-hidden"
               ].join(" ")}
             >
-              <Link
-                to="/aboutus"
+              <div
                 role="menuitem"
                 className="block px-4 py-2 text-gray-200 bg-[#001a33] hover:bg-[#02396c] hover:text-secondary"
               >
-                About Us
-              </Link>
-              <Link
-                to="/contact"
+                1 day
+              </div>
+              <div
                 role="menuitem"
                 className="block px-4 py-2  text-gray-200 bg-[#001a33] hover:bg-[#02396c] hover:text-secondary"
               >
-                Contact Us
-              </Link>
-              <Link
-                to="/termsandconditions"
+                1 week
+              </div>
+              <div
                 role="menuitem"
                 className="block px-4 py-2  text-gray-200 bg-[#001a33] hover:bg-[#02396c] hover:text-secondary"
               >
-                Terms &amp; Conditions
-              </Link>
-              <Link
-                to="/privacy"
-                role="menuitem"
-                className="block px-4 py-2  text-gray-200 bg-[#001a33] hover:bg-[#02396c] hover:text-secondary"
-              >
-                Privacy Policy
-              </Link>
+                1 Month
+              </div>
+              
             </div>
           </button>
           {/* <button className="text-gray-400 border border-gray-400 p-3 rounded-lg">24 hours</button> */}

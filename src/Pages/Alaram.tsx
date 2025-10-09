@@ -113,69 +113,89 @@ export default function AlarmPage() {
   };
 
   return (
-    <div className="p-4">
+    <div className="p-4 bg-[#001a33]">
       <div className="flex justify-between items-center">
-      <div>
-          <h1 className="text-2xl font-bold">
-           {gatewayName}
-            <span className="text-sm text-gray-500 ml-2">({gatewayId})</span>
-          </h1>
+      <div className="">
+        <div>
+          <div className="flex items-baseline gap-2 ">
+            <span className="text-gray-200">Device Name: </span>
+            <h1 className=" text-xl text-gray-300 sm:text-gray-300 t-2xl font-semibold">
+              {gatewayName}
+              {/* <span className="text-sm text-gray-500 ml-2">({gatewayId})</span> */}
+            </h1>
+          </div>
           {gatewayLocation && (
-            <p className="text-sm text-gray-600">{gatewayLocation}</p>
+
+            <div className="flex items-baseline gap-2">
+              <span className="text-gray-200">Device Location:</span>
+              <h1 className="text-gray-300">{gatewayLocation}</h1>
+            </div>
           )}
         </div>
-      <Link to={`/settings${gatewayId ? `?gateway=${gatewayId}` : ""}`}  className="px-4 py-2  bg-gray-500 text-white rounded">
+      </div>
+      <Link to={`/settings${gatewayId ? `?gateway=${gatewayId}` : ""}`}  className="px-4 py-2  bg-gradient-to-r from-[#001a33] to-[#02396c] text-gray-200 rounded">
         Alarm Settings
       </Link>
       </div>
       {/* Filters Section */}
-      <div className="flex gap-4 mb-4 items-end">
-        <div>
-          <label className="block text-sm font-medium mb-1">Start Date</label>
-          <input
-            type="datetime-local"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="border px-3 py-1 rounded"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-1">End Date</label>
-          <input
-            type="datetime-local"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="border px-3 py-1 rounded"
-          />
-        </div>
+    <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 mb-4 mt-3 p-3 rounded-md bg-gradient-to-r from-[#001a33] to-[#02396c] items-center sm:items-end">
+  {/* Start Date */}
+  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+    <label className="text-sm font-medium text-gray-200 whitespace-nowrap">
+      Start Date
+    </label>
+    <input
+      type="datetime-local"
+      value={startDate}
+      onChange={(e) => setStartDate(e.target.value)}
+      className="border px-3 py-1 rounded w-full sm:w-auto"
+    />
+  </div>
 
-        <button
-          onClick={handleApplyFilters}
-          className="px-4 py-2 bg-blue-600 text-white rounded"
-        >
-          Apply
-        </button>
+  {/* End Date */}
+  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+    <label className="text-sm font-medium text-gray-200 whitespace-nowrap">
+      End Date
+    </label>
+    <input
+      type="datetime-local"
+      value={endDate}
+      onChange={(e) => setEndDate(e.target.value)}
+      className="border px-3 py-1 rounded w-full sm:w-auto"
+    />
+  </div>
 
-        <button
-          onClick={handleClearFilter}
-          className="px-4 py-2 bg-gray-500 text-white rounded"
-        >
-          Clear Filter
-        </button>
+  {/* Apply Button */}
+  <button
+    onClick={handleApplyFilters}
+    className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded shadow transition"
+  >
+    Apply
+  </button>
 
-        <button
-          onClick={() => {
-            const start = startDate ? new Date(startDate).toISOString() : "";
-            const end = endDate ? new Date(endDate).toISOString() : "";
-            navigate(
-              `/alarm-download?gatewayId=${gatewayId}&startDate=${start}&endDate=${end}`
-            );
-          }}
-          className="px-4 py-2 bg-green-600 text-white rounded"
-        >
-          Export Data
-        </button>
-      </div>
+  {/* Clear Filter Button */}
+  <button
+    onClick={handleClearFilter}
+    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded shadow transition"
+  >
+    Clear
+  </button>
+
+  {/* Export Data Button */}
+  <button
+    onClick={() => {
+      const start = startDate ? new Date(startDate).toISOString() : "";
+      const end = endDate ? new Date(endDate).toISOString() : "";
+      navigate(
+        `/alarm-download?gatewayId=${gatewayId}&startDate=${start}&endDate=${end}`
+      );
+    }}
+    className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded shadow transition"
+  >
+    Export Data
+  </button>
+</div>
+
 
       {/* Loader */}
       {loading ? (
@@ -243,7 +263,7 @@ export default function AlarmPage() {
             >
               Previous
             </button>
-            <span>
+            <span className="text-gray-300">
               Page {page} of {totalPages}
             </span>
             <button
