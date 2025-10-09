@@ -35,7 +35,9 @@ export function useSocket(
 ): Socket {
   const socket = useRef<Socket>(getSocket()).current;
   const lastSubsRef = useRef<{ gatewayId?: string; token?: string }>({});
-
+socket.onAny((event, data) => {
+  console.log("🔔 Got socket event:", event, data);
+});
   useEffect(() => {
     // subscribe function (reusable for connect/reconnect & prop changes)
     const doSubscribe = () => {
