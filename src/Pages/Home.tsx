@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 // import MixChartHome from "../Components/MixChartHome";
-import {  useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useSocket } from "../hooks/useSocket";
 import { api } from "../api";
 import { ToastContainer, toast } from "react-toastify";
@@ -11,7 +11,7 @@ import BarChart from "../Components/BarChart";
 interface GlobalAlarm {
   _id?: string;
   gatewayId: string;
-  gatewayName:string;
+  gatewayName: string;
   timestamp: string;
   category: string;
   subcategory: string;
@@ -384,7 +384,7 @@ const Home = () => {
               >
                 1 Month
               </div>
-              
+
             </div>
           </button>
           {/* <button className="text-gray-400 border border-gray-400 p-3 rounded-lg">24 hours</button> */}
@@ -424,8 +424,8 @@ const Home = () => {
       </div>
       <div className="flex flex-col md:flex-row gap-4 md:gap-3">
         {/* RIGHT: Sidebar (on desktop sits right; on mobile, appears above) */}
-        <aside className="order-1 md:order-1 w-full md:w-[28%] lg:w-[24%] xl:w-[20%]  ">
-          <div className="md:sticky md:top-4 bg-gradient-to-r from-[#001a33] to-[#02396c]  rounded-md px-1 shadow-md mb-3">
+        <aside className="order-1 md:order-1 bg-gradient-to-r from-[#001a33] to-[#02396c] rounded-md px-1 shadow-md w-full md:w-[28%] lg:w-[24%] xl:w-[20%]  ">
+          <div className="md:sticky md:top-4 ">
             <div className="text-center">
               <div className="flex justify-between items-end p-2">
                 <h2 className="text-xl text-white sm:text-2xl font-semibold  ">Devices</h2>
@@ -480,7 +480,7 @@ const Home = () => {
 
             </div>
 
-            <div className="mt-2 h-[94vh]  overflow-y-scroll scrollbar-hide">
+            <div className="mt-2 h-[90vh]  overflow-y-scroll scrollbar-hide">
               {gateways.map((gateway) => (
                 <button
                   key={gateway._id}
@@ -494,63 +494,12 @@ const Home = () => {
               ))}
 
             </div>
-
           </div>
-          {/* <div className="px-3 py-3 bg-gradient-to-r from-[#001a33] to-[#02396c]  rounded-md  shadow-md">
-            <h2 className="text-white text-2xl font-semibold">Alarms</h2>
-            <div className="px-3 sm:px-4 pb-4 max-h-[60vh] min-h-80 overflow-y-auto overflow-x-auto scrollbar-hide">
-              <table className="w-full border-collapse">
-                <thead className="sticky top-0 bg-gradient-to-r from-[#001a33] to-[#02396c] z-10">
-                  <tr className="text-left text-gray-400 text-xs sm:text-sm">
-                    <th className="py-2">Gateway</th>
-                    <th className="py-2">Time</th>
-                    <th className="py-2">Category</th>
-                    <th className="py-2">Subcategory</th>
-                    <th className="py-2">Value</th>
-                    <th className="py-2">Priority</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-700">
-                  {alarms.map((alarm, i) => (
-                    <tr
-                      key={`${alarm.timestamp}-${alarm.category}-${alarm.subcategory}-${i}`}
-                      className="text-xs sm:text-sm font-semibold text-gray-300"
-                    >
-                      <td className="py-3">{alarm.gatewayId}</td>
-                      <td className="py-3">
-                        {new Date(alarm.timestamp).toLocaleTimeString()}
-                      </td>
-                      <td className="py-3">{alarm.category}</td>
-                      <td className="py-3">{alarm.subcategory}</td>
-                      <td className="py-3">{alarm.value}</td>
-                      <td className="py-3">
-                        {alarm.priority === "High" && (
-                          <span className="px-3 py-1 text-xs font-medium text-red-100 bg-red-800 rounded-full">
-                            Critical
-                          </span>
-                        )}
-                        {alarm.priority === "Normal" && (
-                          <span className="px-3 py-1 text-xs font-medium text-green-100 bg-green-800 rounded-full">
-                            Normal
-                          </span>
-                        )}
-                        {alarm.priority === "Low" && (
-                          <span className="px-3 py-1 text-xs font-medium text-yellow-100 bg-yellow-600 rounded-full">
-                            Warning
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div> */}
         </aside>
 
         {/* LEFT: Main Content on mobile, but on desktop it appears on left (order-1) */}
-        <div className="order-2 md:order-2 w-full md:flex-1  ">
-          <div className=" p-6 rounded-md  bg-[#02396c] mb-3">
+        <div className="order-2 md:order-2 bg-[#02396c] w-full md:flex-1  ">
+          <div className=" p-6  bg-[#02396c]">
             <h2 className="text-lg font-semibold mb-4 text-white">System Topology</h2>
             <div className="flex justify-center">
               <svg width="100%" height="300" viewBox="0 0 600 300">
@@ -573,7 +522,7 @@ const Home = () => {
                   stroke="#38bdf8"
                   strokeWidth="2"
                 />
-                <text x="280" y="152" fill="white" fontSize="12">
+                <text x="280" y="152" fill="white" fontSize="12" >
                   Power-Bus
                 </text>
 
@@ -651,58 +600,58 @@ const Home = () => {
               </svg>
             </div>
           </div>
-
-          <div className="px-3 py-3 bg-[#02396c]  rounded-md  shadow-md " >
-            <h2 className="text-white text-2xl font-semibold">Alarms</h2>
-            <div className="px-3 sm:px-4 pb-4 max-h-[40vh] min-h-72 overflow-y-auto overflow-x-auto scrollbar-hide">
-              <table className="w-full border-collapse">
-                <thead className="sticky top-0 bg-gradient-to-r  bg-[#02396c] z-10">
-                  <tr className="text-left text-gray-400 text-xs sm:text-sm">
-                    <th className="py-2">Gateway</th>
-                    <th className="py-2">Time</th>
-                    <th className="py-2">Category</th>
-                    <th className="py-2">Subcategory</th>
-                    <th className="py-2">Value</th>
-                    <th className="py-2">Priority</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-700">
-                  {alarms.map((alarm, i) => (
-                    <tr
-                      key={`${alarm.gatewayName}-${alarm.timestamp}-${alarm.category}-${alarm.subcategory}-${i}`}
-                      className="text-xs sm:text-sm font-semibold text-gray-300"
-                    >
-                      <td className="py-3">{alarm.gatewayName}</td>
-                      <td className="py-3">
-                        {new Date(alarm.timestamp).toLocaleTimeString()}
-                      </td>
-                      <td className="py-3">{alarm.category}</td>
-                      <td className="py-3">{alarm.subcategory}</td>
-                      <td className="py-3">{alarm.value}</td>
-                      <td className="py-3">
-                        {alarm.priority === "High" && (
-                          <span className="px-3 py-1 text-xs font-medium text-red-100 bg-red-800 rounded-full">
-                            Critical
-                          </span>
-                        )}
-                        {alarm.priority === "Normal" && (
-                          <span className="px-3 py-1 text-xs font-medium text-green-100 bg-green-800 rounded-full">
-                            Normal
-                          </span>
-                        )}
-                        {alarm.priority === "Low" && (
-                          <span className="px-3 py-1 text-xs font-medium text-yellow-100 bg-yellow-600 rounded-full">
-                            Warning
-                          </span>
-                        )}
-                      </td>
+          <div className="bg-[#001a33] pt-3">
+            <div className="px-3 py-3 bg-[#02396c] " >
+              <h2 className="text-white text-2xl font-semibold">Alarms</h2>
+              <div className="px-3 sm:px-4 pb-4 max-h-[48vh] min-h-70 overflow-y-auto overflow-x-auto scrollbar-hide">
+                <table className="w-full border-collapse">
+                  <thead className="sticky top-0 bg-gradient-to-r  bg-[#02396c] z-10">
+                    <tr className="text-left text-gray-400 text-xs sm:text-sm">
+                      <th className="py-2">Gateway</th>
+                      <th className="py-2">Time</th>
+                      <th className="py-2">Category</th>
+                      <th className="py-2">Subcategory</th>
+                      <th className="py-2">Value</th>
+                      <th className="py-2">Priority</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-               
-            </div>
-             <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-2 text-sm">
+                  </thead>
+                  <tbody className="divide-y divide-gray-700">
+                    {alarms.map((alarm, i) => (
+                      <tr
+                        key={`${alarm.gatewayName}-${alarm.timestamp}-${alarm.category}-${alarm.subcategory}-${i}`}
+                        className="text-xs sm:text-sm font-semibold text-gray-300"
+                      >
+                        <td className="py-3">{alarm.gatewayName}</td>
+                        <td className="py-3">
+                          {new Date(alarm.timestamp).toLocaleTimeString()}
+                        </td>
+                        <td className="py-3">{alarm.category}</td>
+                        <td className="py-3">{alarm.subcategory}</td>
+                        <td className="py-3">{alarm.value}</td>
+                        <td className="py-3">
+                          {alarm.priority === "High" && (
+                            <span className="px-3 py-1 text-xs font-medium text-red-100 bg-red-800 rounded-full">
+                              Critical
+                            </span>
+                          )}
+                          {alarm.priority === "Normal" && (
+                            <span className="px-3 py-1 text-xs font-medium text-green-100 bg-green-800 rounded-full">
+                              Normal
+                            </span>
+                          )}
+                          {alarm.priority === "Low" && (
+                            <span className="px-3 py-1 text-xs font-medium text-yellow-100 bg-yellow-600 rounded-full">
+                              Warning
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+              </div>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-2 text-sm">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
@@ -719,88 +668,17 @@ const Home = () => {
                   Next
                 </button>
               </div>
-          </div>
-          {/* <div className="bg-white rounded-xl shadow-sm p-3 sm:p-4 mb-4 ">
-            <MixChartHome />
-          </div> */}
-
-          {/* table wrapper keeps it scrollable on small screens */}
-
-          {/* <div className="bg-white rounded-xl shadow-sm ">
-            <h2 className="text-lg sm:text-xl font-bold p-3 sm:p-4">Live + Saved Alarms</h2>
-
-            <div className="px-3 sm:px-4 pb-4 max-h-[60vh] min-h-80 overflow-y-auto overflow-x-auto">
-              <table className="min-w-full table-auto text-xs sm:text-sm">
-                <thead className="bg-gray-200 sticky top-0 z-10">
-                  <tr>
-                    <th className="px-3 py-2 text-left">Gateway</th>
-                    <th className="px-3 py-2 text-left">Time</th>
-                    <th className="px-3 py-2 text-left">Category</th>
-                    <th className="px-3 py-2 text-left">Subcategory</th>
-                    <th className="px-3 py-2 text-left">Value</th>
-                    <th className="px-3 py-2 text-left">Priority</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {alarms.map((alarm, i) => (
-                    <tr
-                      key={`${alarm.timestamp}-${alarm.category}-${alarm.subcategory}-${i}`}
-                      className={
-                        alarm.priority === "High"
-                          ? "bg-red-200"
-                          : alarm.priority === "Normal"
-                            ? "bg-green-200"
-                            : "bg-blue-200"
-                      }
-                    >
-                      <td className="px-3 py-2 font-semibold">{alarm.gatewayId}</td>
-                      <td className="px-3 py-2">
-                        {new Date(alarm.timestamp).toLocaleTimeString()}
-                      </td>
-                      <td className="px-3 py-2">{alarm.category}</td>
-                      <td className="px-3 py-2">{alarm.subcategory}</td>
-                      <td className="px-3 py-2">{alarm.value}</td>
-                      <td
-                        className={`px-3 py-2 font-semibold ${alarm.priority === "High"
-                          ? "text-red-600"
-                          : alarm.priority === "Normal"
-                            ? "text-green-700"
-                            : "text-blue-600"
-                          }`}
-                      >
-                        {alarm.priority}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-2 mt-4 text-sm">
-                <button
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  className="px-3 py-1 rounded border bg-gray-50 disabled:opacity-50"
-                >
-                  Previous
-                </button>
-                <span className="text-gray-700">Page {page} of {totalPages}</span>
-                <button
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                  className="px-3 py-1 rounded border bg-gray-50 disabled:opacity-50"
-                >
-                  Next
-                </button>
-              </div>
             </div>
-          </div> */}
+          </div>
         </div>
 
-        <div className="order-3 md:order-3 lg:w-[28%] md:w-[35%] sm:w-[100%]  ">
-          <div className="rounded-md   bg-gradient-to-r from-[#02396c] to-[#001a33]  shadow-md mb-3 ">
-            <AreaChart />
+        <div className="order-3 md:order-3   bg-gradient-to-r from-[#02396c] to-[#001a33]  lg:w-[28%] md:w-[35%] sm:w-[100%]  ">
+          <div className=" bg-[#001a33] pb-3 ">
+            <div className="bg-gradient-to-r from-[#02396c] to-[#001a33]">
+              <AreaChart />
+            </div>
           </div>
-          <div className="rounded-md   bg-gradient-to-r from-[#02396c] to-[#001a33]  shadow-md">
+          <div className="bg-gradient-to-r from-[#02396c] to-[#001a33] ">
             <BarChart />
           </div>
         </div>

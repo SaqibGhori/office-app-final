@@ -66,7 +66,7 @@ const AreaChart: React.FC = () => {
   ];
 
   return (
-    <div className=" p-4 pb-6 rounded-xl shadow-lg">
+    <div className=" p-4 pb-6 ">
       <h2 className="text-white text-lg mb-2">System Overview</h2>
       <Chart options={options} series={series} type="area" height={300}  />
     </div>

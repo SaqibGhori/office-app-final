@@ -73,7 +73,7 @@ export default function MainDashboard() {
   }, [reading, selectedTitle]);
 
   return (
-    <div className="p-4 bg-[#001a33] h-100vh">
+    <div className="p-4 bg-[#001a33]">
       <div className="">
         <div>
           <div className="flex items-baseline gap-2 ">
