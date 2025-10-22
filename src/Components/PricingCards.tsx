@@ -64,7 +64,7 @@ console.log(currentSlide)
     return () => mq.removeEventListener?.("change", setFromMQ);
   }, []);
 
-  // Auto-slide on mobile
+  // Auto-slide on mobile 
   useEffect(() => {
     // Pause auto-slide when modal is open
     if (isModalOpen) {

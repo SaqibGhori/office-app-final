@@ -79,7 +79,7 @@ export default function SuperHome() {
 
   return (
     <div className="p-8">
-      <h1 className="text-3xl md:text-4xl font-bold mb-6">Hello, Superadmin!</h1>
+      <h1 className="text-3xl md:text-4xl font-bold mb-6">Superadmin Dashboard</h1>
 
       {/* Filters */}
       <div className="bg-white rounded-xl shadow p-4 mb-4 grid grid-cols-1 md:grid-cols-5 gap-3">

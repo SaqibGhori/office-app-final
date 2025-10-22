@@ -1,16 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate,  Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import watticon from '../../assets/watticon.png'
 interface UserNavbarProps {
-  isLoggedIn: boolean;
+  isLoggedInAdmin: boolean;
 }
-const Navbar: React.FC<UserNavbarProps> = ({ isLoggedIn }) => {
+const AdminNavbar: React.FC<UserNavbarProps> = ({ isLoggedInAdmin }) => {
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const { search } = useLocation();
-  const gatewayId = new URLSearchParams(search).get("gateway");
   const [isOpen, setIsOpen] = useState(false);
 
   const [open, setOpen] = useState(false);
@@ -40,9 +38,9 @@ const Navbar: React.FC<UserNavbarProps> = ({ isLoggedIn }) => {
     navigate('/login');
     setIsOpen(false);
   };
-
   return (
-    <nav className=" sticky top-0 z-50 bg-gradient-to-tr from-[#001a33] to-[#02396c]">
+
+     <nav className=" sticky top-0 z-50 bg-gradient-to-tr from-[#001a33] to-[#02396c]">
       <div className="max-w-screen-xl mx-auto p-4 flex items-center justify-between">
 
         {/* LEFT - LOGO */}
@@ -53,7 +51,7 @@ const Navbar: React.FC<UserNavbarProps> = ({ isLoggedIn }) => {
 
         {/* DESKTOP MENU */}
         <ul className="hidden md:flex items-center space-x-6 text-gray-200  font-medium">
-          <li><Link to="/">Home</Link></li>
+          <li><Link to="/superadmin/home">Home</Link></li>
           <li className="relative" ref={ddRef}>
             <button
               type="button"
@@ -118,27 +116,11 @@ const Navbar: React.FC<UserNavbarProps> = ({ isLoggedIn }) => {
             </div>
           </li>
 
-          {isLoggedIn && (
-            <>
-              <li><Link to="/dashboard">Main Dashboard</Link></li>
-              <Link to={`/device-settings${gatewayId ? `?gateway=${gatewayId}` : ""}`}>
-                Device Settings
-              </Link>
-              {gatewayId && (
-                <>
-                  <li><Link to={`/maindashboard?gateway=${gatewayId}`}>Dashboard</Link></li>
-                  <li><Link to={`/fileview?gateway=${gatewayId}`}>File View</Link></li>
-                  <li><Link to={`/alaram?gateway=${gatewayId}`}>Alarms</Link></li>
-
-                </>
-              )}
-            </>
-          )}
         </ul>
 
         {/* DESKTOP RIGHT BUTTON */}
         <div className="hidden md:block text-gray-200  font-medium">
-          {isLoggedIn ? (
+          {isLoggedInAdmin ? (
             <button onClick={handleLogout} className="hover:text-red-600">
               Logout
             </button>
@@ -171,32 +153,19 @@ const Navbar: React.FC<UserNavbarProps> = ({ isLoggedIn }) => {
           }`}
       >
         <h2 className="text-2xl text-gray-200 font-bold mb-4">Menu</h2>
-        <Link to="/" onClick={() => setIsOpen(false)}>Home</Link>
+        <Link to="/superadmin/home" onClick={() => setIsOpen(false)}>Home</Link>
         <Link to="/aboutus" onClick={() => setIsOpen(false)}>About Us</Link>
         <Link to="/contact" onClick={() => setIsOpen(false)}>Contact Us</Link>
         <Link to="/termsandconditions" onClick={() => setIsOpen(false)}>Terms And Conditions</Link>
         <Link to="/privacy" onClick={() => setIsOpen(false)}>Privacy Policy</Link>
 
-        {isLoggedIn && (
-          <>
-            <Link to="/dashboard" onClick={() => setIsOpen(false)}>Main Dashboard</Link>
-            {gatewayId && (
-              <>
-                <Link to={`/maindashboard?gateway=${gatewayId}`} onClick={() => setIsOpen(false)}>Dashboard</Link>
-                <Link to={`/fileview?gateway=${gatewayId}`} onClick={() => setIsOpen(false)}>File View</Link>
-                <Link to={`/alaram?gateway=${gatewayId}`} onClick={() => setIsOpen(false)}>Alarms</Link>
-              </>
-            )}
-          </>
-        )}
-
         <div className="mt-auto">
-          {isLoggedIn ? (
+          {isLoggedInAdmin ? (
             <button onClick={handleLogout} className="text-red-600 font-semibold">
               Logout
             </button>
           ) : (
-            <Link to="/login" onClick={() => setIsOpen(false)} className="text-blue-600 font-semibold">
+            <Link to="/superadmin/login" onClick={() => setIsOpen(false)} className="text-blue-600 font-semibold">
               Login
             </Link>
           )}
@@ -206,4 +175,4 @@ const Navbar: React.FC<UserNavbarProps> = ({ isLoggedIn }) => {
   );
 };
 
-export default Navbar;
+export default AdminNavbar;
