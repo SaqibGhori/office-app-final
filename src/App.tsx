@@ -43,6 +43,7 @@ import DeviceSettings from './Pages/DeviceSettings';
 // ───────── Navbars ─────────
 import Navbar from './Components/Navbar';
 import AdminNavbar from './Components/AdminNavbar';
+// import RealtimeViewer from "./Components/RealtimeViewer";
 
 function AppContent() {
   const location = useLocation();
@@ -53,6 +54,8 @@ function AppContent() {
 
   return (
     <>
+{/* <RealtimeViewer /> */}
+
       {/* Show different navbar based on route */}
       {isSuperAdminRoute ? <AdminNavbar isLoggedInAdmin={!!token} /> : <Navbar isLoggedIn={!!token} />}
 
@@ -108,9 +111,9 @@ function AppContent() {
           <Route path="/alarm-download" element={<AlarmDownloadPage />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
-
         {/* ───────── Fallback ───────── */}
         <Route path="*" element={<Navigate to="/" replace />} />
+        
       </Routes>
     </>
   );
