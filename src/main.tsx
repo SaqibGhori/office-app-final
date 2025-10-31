@@ -9,7 +9,8 @@ import "react-toastify/dist/ReactToastify.css";
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     
-    <App />
+    <h1 className='text-center pt-4 font-bold text-2xl'>Maintenance in progress...</h1>
+    {/* <App />
     <ToastContainer
       position="top-right"
       theme="colored"
@@ -17,7 +18,7 @@ createRoot(document.getElementById('root')!).render(
       newestOnTop
       pauseOnHover={false}
       closeOnClick
-    />
+    /> */}
     
   </StrictMode>,
 )
